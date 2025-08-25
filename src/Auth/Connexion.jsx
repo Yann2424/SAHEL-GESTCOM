@@ -9,6 +9,11 @@ export default function Connexion() {
   const [error,setError ] = useState('')
   const {register, handleSubmit,reset,formState:{errors}} =useForm()
 
+  const welcome = ()=>{
+    setStep('welcome')
+    reset()
+    setError('')
+  }
   const soumission = async(data)=>{
     const {email,password,nom,telephone} = data
 
@@ -25,11 +30,17 @@ export default function Connexion() {
       } 
     } catch(err){
       console.error('erreuer firebase :',err.message)
-      switch(err.code){
+      if (step === 'signup'){
+        switch(err.code){
         case 'auth/invalid-email':
           setError("L'adresse email est invalide")
         break
-        case 'auth/wrong-password':
+        default:
+        setError("Une erreur est survenue  ")
+      }
+      } else if ( step === 'login'){
+        switch (err.code){
+          case 'auth/wrong-password':
           setError("Mot de passe incorrect")
         break
         case 'auth/user-not-found':
@@ -38,11 +49,9 @@ export default function Connexion() {
         case 'auth/email-already-in-use':
           setError("Cet email est déjà utilisé")
         break
-        case 'auth/weak-password':
-          setError("Le mot de passe est trop faible")
-        break
         default:
-        setError("Une erreur est survenue  ")
+          setError('')
+        }
       }
     }
   }
@@ -73,7 +82,11 @@ export default function Connexion() {
         <div className="bg-white w-[400px] rounded-[20px] p-[30px] text-center shadow-lg text-slate-900">
           <h1 className="mb-[10px] bg-gradient-to-br from-[#0b3d91] to-[#f29544] bg-clip-text text-transparent text-3xl ">S'inscrire</h1>
           <p className="text-[14px] text-slate-900 mb-[20px]">Pour continuer</p>
-          <form action="" onSubmit={handleSubmit(soumission)} className="space-y-4" noValidate>
+          <form 
+          onSubmit={handleSubmit(soumission)} 
+          className="space-y-4" 
+          noValidate
+          >
             <input 
             {...register('nom', {required : 'ce champ est Requis'})}
             type="text" 
@@ -130,6 +143,7 @@ export default function Connexion() {
               {errors.password.message}
             </p>)
           }
+          { error && <p className="text-red-500 text-sm mt-1"> {error}</p>}
           <button
           type="submit" 
           className="bg-gradient-to-br from-[#0b3d91] 
@@ -143,7 +157,7 @@ export default function Connexion() {
             <span className="text-[#0b3d91] text-bold cursor-pointer transition-all" onClick={() => setStep("login")}>Se connecter</span>
           </p>
           <p className="link">
-            <span className="text-[#0b3d91] text-bold cursor-pointer transition-all" onClick={() => setStep("welcome")}>← Retour à l'accueil</span>
+            <span className="text-[#0b3d91] text-bold cursor-pointer transition-all" onClick={welcome}>← Retour à l'accueil</span>
           </p>
         </div>
       )}
@@ -152,7 +166,11 @@ export default function Connexion() {
         <div className="bg-white rounded-[20px] p-[30px] text-center shadow-lg text-slate-900">
           <h1 className="mb-[10px] bg-gradient-to-br from-[#0b3d91] to-[#f29544] bg-clip-text text-transparent text-3xl ">Se connecter</h1>
           <p className="text-[14px] text-[#555] mb-[20px]">Pour continuer</p>
-          <form action="" onSubmit={handleSubmit(soumission)} className="space-y-4" noValidate>
+          <form 
+          onSubmit={handleSubmit(soumission)} 
+          className="space-y-4" 
+          noValidate
+          >
           <input
           {...register('email',
             {required : 'ce champ est requis ', 
@@ -200,7 +218,7 @@ export default function Connexion() {
           <p className="mt-[15px] text-[15px] ">
             <span 
             className="text-[#0b3d91] text-bold cursor-pointer transition-all"
-            onClick={() => setStep("welcome")}>← Retour à l'accueil</span>
+            onClick={welcome}>← Retour à l'accueil</span>
           </p>
         </div>
       )}

@@ -1,0 +1,247 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+}
+
+.dashboard {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #0b3d91;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px; 
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f29544;
+}
+
+.logo-placeholder {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #f29544;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.logo-img {
+  max-height: 60px;
+  max-width: 100%;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 10px 0;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.sidebar li:hover {
+  background: #f29544;
+  padding-left: 8px;
+}
+
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  padding: 20px;
+  gap: 20px;
+}
+
+.user-list-section {
+  width: 30%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 2px solid #f29544;
+}
+
+.search-icon {
+  color: #0b3d91;
+  margin-right: 8px;
+  font-size: 1.2rem;
+}
+
+.search-bar {
+  flex: 1;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+  color: black;
+}
+
+.user-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.user-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgb(107, 102, 213);
+}
+
+.user-item:hover {
+  background: #f29544;
+  color: white;
+}
+
+.profile-section {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  width: 800px;
+}
+
+.profile-section h2 {
+  margin-top: 0;
+  color: #0b3d91;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card {
+  background: #fafafa;
+  padding: 15px;
+  border-left: 4px solid #f29544;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+.card p, li{
+    color: black;
+}
+.card h3 {
+  margin-top: 0;
+  color: #0b3d91;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .main {
+    flex-direction: column;
+  }
+  .user-list-section {
+    width:100%;
+  }
+}
+
+.add-user-section {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center; /* Centre horizontalement */
+}
+
+.add-user-section button {
+  padding: 10px;
+  background: #0b3d91;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.add-user-section button:hover {
+  background: #f29544;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    width: 300px;
+    position: relative; /* Pour positionner le bouton de fermeture */
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #0b3d91; /* Couleur de la croix */
+}
+
+.close-button:hover {
+    color: #f29544; /* Couleur au survol */
+}
+
+.modal input {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 97%;
+  color: black;
+}
+
+ .bt{
+  width: 100%;
+  padding:10px;
+  background: #0b3d91;
+  color:white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.bt:hover{
+  background: #f29544;
+}

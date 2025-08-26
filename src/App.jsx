@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import Dash from './Vue/Dash'
 
 
 import Connexion from './Modules/Auth/Connexion'
@@ -8,7 +8,7 @@ function App (){
 
   return(
     <>
-      <Connexion/>
+      <Dash/>
       
     </>
   )

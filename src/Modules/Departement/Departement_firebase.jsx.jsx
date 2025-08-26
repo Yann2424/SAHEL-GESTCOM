@@ -1,9 +1,9 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
-import { useEffect } from 'react'
 
 
-export const  newDepartement =async (datas)=>{
+
+export const  NewDepartement =async (datas)=>{
   try{
     const docRef = doc (collection(db,'Departements'),datas.name)
     const docSnapshot = await getDoc(docRef)
@@ -20,7 +20,7 @@ export const  newDepartement =async (datas)=>{
   }
 }
 
-export const getDepartement = async()=>{
+export const GetDepartement = async()=>{
   try{
     const querySnapshot = await getDocs (collection(db,'Departements'))
     const dataList = querySnapshot.docs.map((doc)=>({
@@ -30,6 +30,7 @@ export const getDepartement = async()=>{
     return dataList
   } catch(err){
     console.log('erreur lors de la recuperation',err)
+    return []
   }
 }
 
@@ -78,26 +79,5 @@ export const DeleteDepartement = async (datas)=>{
 }
 
 
-export const newCollection  = async(nameCollection,datas)=>{
-   try{
-      await addDoc(collection(db,nameCollection),
-      datas)
-    console.log('departement ajouter',datas)
-  }catch(error){
-    console.log('une erreur est survenue lors de l"ajout',error)
-    }
-}
 
-export const getCollection = async (nameCollection) =>{
-  try{
-    const querySnapshot = await getDocs(collection(db,nameCollection))
-    const dataList = querySnapshot.docs.map((doc)=>({
-      id:doc.id,
-      ...doc.data()
-    }))
-    return dataList
-  } catch(err){
-    console.log('erreur lors de la recuperation',err)
-  }
-}
 

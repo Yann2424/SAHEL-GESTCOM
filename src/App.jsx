@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import Connexion from './Auth/Connexion'
+
+
+import Connexion from './Modules/Auth/Connexion'
+import FormDepartement from './View/texte'
 
 function App (){
 
   return(
     <>
-      <Connexion/>
+      <FormDepartement/>
     </>
   )
 }

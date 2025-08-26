@@ -50,7 +50,7 @@ export const UpdateDepartement = async (datas,newDatas,newName) =>{
       console.log('ce departement n"existe pas');
       return
     }
-    // cree un nouveau document
+    
     const newDocRef = doc(db,'Departements',newName)
     await setDoc(newDocRef,newDatas)
 
@@ -58,23 +58,23 @@ export const UpdateDepartement = async (datas,newDatas,newName) =>{
     console.log('departement modifier !');
     
   } catch(err){
-    console.log('erreur lors de l/update !',err)
+    console.log('erreur lors de l/update :',err)
   }
 }
 
 
 export const DeleteDepartement = async (datas)=>{
   try{
-    const docRef = doc(collection(db,'Departements',datas.name))
+    const docRef = doc(db,'Departements',datas.name)
     const docSnapshot = await getDoc(docRef)
     if(!docSnapshot.exists()){
       console.log('departement n"existe pas');
       return
     }
-    await deleteDoc(docRef,datas)
+    await deleteDoc(docRef)
     console.log('departement supprime !')
   } catch(err){
-    console.log('erreur lors du delete',err)
+    console.log('erreur lors du delete :',err)
   }
 }
 

@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
 
 
@@ -34,16 +34,13 @@ export const GetUser = async()=>{
   }
 }
 
-export const UpdateUser = async (datas,newDatas,newEmail) =>{
+export const UpdateUser = async (datas,newDatas) =>{
   try{
     if (!datas?.email) {
       console.error("Ancien email invalide:", datas);
       return;
     }
-    if (!newEmail) {
-      console.error("Nouveau email invalide:", newEmail);
-      return;
-    }
+
     const docRef = doc(db,'Utilisateurs',datas.email)
     const docSnapshot = await getDoc(docRef)
     if(!docSnapshot.exists()){
@@ -51,10 +48,13 @@ export const UpdateUser = async (datas,newDatas,newEmail) =>{
       return
     }
     
-    const newDocRef = doc(db,'Departements',newEmail)
-    await setDoc(newDocRef,newDatas)
-
-    await deleteDoc(docRef)
+    if(datas.email !== newDatas.email){
+      const newDocRef = doc(db,"utilisateurs",newDatas.email)
+      await setDoc (newDocRef,newDatas)
+      deleteDoc(docRef)
+    } else {
+      await updateDoc(docRef,newDatas)
+    }
     console.log('Utilisateurs modifier !');
     
   } catch(err){

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../Administrateur/Utilisateur.css";
 import {
 	FaUserCircle,
@@ -6,107 +6,20 @@ import {
 	FaFolderOpen,
 	FaWallet,
 	FaReceipt,
-	FaSearch,
 } from "react-icons/fa";
+import { NewUser, GetUser, UpdateUser } from "../../Modules/User/User_firebase";
 
-const initialUsers = [
-	{
-		name: "Alice Dupont",
-		email: "alice.dupont@example.com",
-		téléphone: "‪+237 673637833‬",
-		department: "Finance",
-		budget: 50000,
-		expenses: [
-			{ motif: "Formation", date: "2025-01-15", montant: 2000 },
-			{ motif: "Voyage", date: "2025-03-10", montant: 1500 },
-		],
-	},
-	{
-		name: "Marc Durand",
-		email: "marc.durand@example.com",
-		téléphone: "‪+237 673637834‬",
-		department: "Informatique",
-		budget: 70000,
-		expenses: [
-			{ motif: "Serveurs", date: "2025-02-05", montant: 10000 },
-			{ motif: "Logiciels", date: "2025-04-22", montant: 3000 },
-		],
-	},
-	{
-		name: "Sophie Martin",
-		email: "sophie.martin@example.com",
-		téléphone: "‪+237 673637835‬",
-		department: "Marketing",
-		budget: 40000,
-		expenses: [
-			{ motif: "Campagne pub", date: "2025-02-20", montant: 8000 },
-			{ motif: "Événement", date: "2025-05-14", montant: 5000 },
-		],
-	},
-	{
-		name: "Jean Petit",
-		email: "jean.petit@example.com",
-		téléphone: "‪+237 673637836‬",
-		department: "Ressources Humaines",
-		budget: 30000,
-		expenses: [{ motif: "Recrutement", date: "2025-03-01", montant: 2500 }],
-	},
-	{
-		name: "Paul Lambert",
-		email: "paul.lambert@example.com",
-		téléphone: "‪+237 673637837‬",
-		department: "Finance",
-		budget: 60000,
-		expenses: [{ motif: "Audit", date: "2025-01-28", montant: 4000 }],
-	},
-	{
-		name: "Julie Bernard",
-		email: "julie.bernard@example.com",
-		téléphone: "‪+237 673637838‬",
-		department: "Informatique",
-		budget: 80000,
-		expenses: [{ motif: "Cloud", date: "2025-02-12", montant: 12000 }],
-	},
-	{
-		name: "Eric Moreau",
-		email: "eric.moreau@example.com",
-		téléphone: "‪+237 673637839‬",
-		department: "Marketing",
-		budget: 45000,
-		expenses: [{ motif: "SEO", date: "2025-03-30", montant: 2000 }],
-	},
-	{
-		name: "Claire Robert",
-		email: "claire.robert@example.com",
-		téléphone: "‪+237 673637840‬",
-		department: "Ressources Humaines",
-		budget: 35000,
-		expenses: [
-			{ motif: "Formation interne", date: "2025-04-15", montant: 1500 },
-		],
-	},
-	{
-		name: "Lucas Fontaine",
-		email: "lucas.fontaine@example.com",
-		téléphone: "‪+237 673637841‬",
-		department: "Finance",
-		budget: 55000,
-		expenses: [{ motif: "Conseil", date: "2025-05-05", montant: 3000 }],
-	},
-	{
-		name: "Emma Leroy",
-		email: "emma.leroy@example.com",
-		téléphone: "‪+237 673637842‬",
-		department: "Informatique",
-		budget: 90000,
-		expenses: [{ motif: "Sécurité", date: "2025-06-18", montant: 15000 }],
-	},
+const departments = [
+	"Finance",
+	"Informatique",
+	"Marketing",
+	"Ressources Humaines",
 ];
 
 function Utilisateur() {
 	const [search, setSearch] = useState("");
 	const [selectedUser, setSelectedUser] = useState(null);
-	const [users, setUsers] = useState(initialUsers);
+	const [users, setUsers] = useState([]);
 	const [newUser, setNewUser] = useState({
 		name: "",
 		email: "",
@@ -117,13 +30,22 @@ function Utilisateur() {
 	});
 	const [showForm, setShowForm] = useState(false);
 
+	useEffect(() => {
+		async function fetchUsers() {
+			const data = await GetUser();
+			setUsers(data);
+		}
+		fetchUsers();
+	}, []);
+
 	const filteredUsers = users.filter((user) =>
 		user.name.toLowerCase().includes(search.toLowerCase())
 	);
 
-	const handleAddUser = (e) => {
+	const handleAddUser = async (e) => {
 		e.preventDefault();
 		if (newUser.name && newUser.email && newUser.department) {
+			await NewUser(newUser);
 			setUsers([...users, newUser]);
 			setNewUser({
 				name: "",
@@ -133,8 +55,18 @@ function Utilisateur() {
 				budget: 0,
 				expenses: [],
 			});
-			setShowForm(false); // Cacher le formulaire après l'ajout
+			setShowForm(false);
 		}
+	};
+
+	const handleUpdateUser = async (updatedUser) => {
+		if (!selectedUser) return;
+		await UpdateUser(selectedUser, updatedUser, updatedUser.email);
+		const updatedUsers = users.map((u) =>
+			u.email === selectedUser.email ? updatedUser : u
+		);
+		setUsers(updatedUsers);
+		setSelectedUser(updatedUser);
 	};
 
 	return (
@@ -147,7 +79,6 @@ function Utilisateur() {
 						</button>
 					</div>
 					<div className="search-container">
-						{/* <FaSearch className="search-icon" /> */}
 						<input
 							type="text"
 							placeholder="Rechercher un utilisateur..."
@@ -176,6 +107,7 @@ function Utilisateur() {
 							<h2>
 								<FaUserCircle /> {selectedUser.name}
 							</h2>
+
 							<div className="card">
 								<h3>
 									<FaEnvelope /> Informations personnelles
@@ -188,14 +120,31 @@ function Utilisateur() {
 								<h3>
 									<FaFolderOpen /> Département
 								</h3>
-								<p>{selectedUser.department}</p>
+								<select
+									value={selectedUser.department}
+									onChange={(e) =>
+										handleUpdateUser({
+											...selectedUser,
+											department: e.target.value,
+										})
+									}
+									style={{ padding: "8px", borderRadius: "4px", width: "100%" }}
+								>
+									{departments.map((dep, i) => (
+										<option key={i} value={dep}>
+											{dep}
+										</option>
+									))}
+								</select>
 							</div>
+
 							<div className="card">
 								<h3>
 									<FaWallet /> Budget alloué
 								</h3>
 								<p>{selectedUser.budget.toLocaleString()} F</p>
 							</div>
+
 							<div className="card">
 								<h3>
 									<FaReceipt /> Dépenses effectuées
@@ -218,7 +167,6 @@ function Utilisateur() {
 						</div>
 					)}
 				</div>
-
 				{showForm && (
 					<div className="modal">
 						<div className="modal-content">
@@ -226,7 +174,7 @@ function Utilisateur() {
 								className="close-button"
 								onClick={() => setShowForm(false)}
 							>
-								&times; {/* Unicode pour la croix */}
+								&times;
 							</button>
 							<form onSubmit={handleAddUser}>
 								<input
@@ -255,15 +203,21 @@ function Utilisateur() {
 										setNewUser({ ...newUser, téléphone: e.target.value })
 									}
 								/>
-								<input
-									type="text"
-									placeholder="Département"
+								<select
 									value={newUser.department}
 									onChange={(e) =>
 										setNewUser({ ...newUser, department: e.target.value })
 									}
 									required
-								/>
+								>
+									<option value="">Sélectionnez un département</option>
+									{departments.map((dep, i) => (
+										<option key={i} value={dep}>
+											{dep}
+										</option>
+									))}
+								</select>
+
 								<input
 									type="number"
 									placeholder="Budget"
@@ -272,7 +226,9 @@ function Utilisateur() {
 										setNewUser({ ...newUser, budget: Number(e.target.value) })
 									}
 								/>
-								<button type="submit" className="bt">Enregistrer</button>
+								<button type="submit" className="bt">
+									Enregistrer
+								</button>
 							</form>
 						</div>
 					</div>

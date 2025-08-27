@@ -208,6 +208,24 @@ body {
     position: relative; 
 }
 
+.modal select {
+  width: 97%;              
+  padding: 10px;           
+  border: 1px solid #ccc;   
+  border-radius: 4px;       
+  margin-bottom: 10px;      
+  font-size: 1rem;          
+  color: #000;              
+  background-color: #fff;   
+  outline: none;            
+  cursor: pointer;          
+}
+
+.modal select:focus {
+  border-color: #0b3d91;   
+  box-shadow: 0 0 5px rgba(11, 61, 145, 0.5); 
+}
+
 .close-button {
     position: absolute;
     top: 10px;

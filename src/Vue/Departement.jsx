@@ -36,22 +36,29 @@ function DepartmentsPage() {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (form.name && form.manager) {
-      if (editIndex !== null) {
-        const updatedData = { ...form, active: departments[editIndex].active };
-        await UpdateDepartement(departments[editIndex], updatedData, form.name);
-        const updatedDepartments = [...departments];
-        updatedDepartments[editIndex] = updatedData;
-        setDepartments(updatedDepartments);
-        setEditIndex(null);
-      } else {
-        await NewDepartement({ ...form, active: true });
-        setDepartments([...departments, { ...form, active: true }]);
-      }
-      setForm({ name: "", manager: "" });
+  e.preventDefault();
+  const departmentExists = departments.some(d => d.name === form.name);
+
+  if (departmentExists) {
+    alert("Un département avec ce nom existe déjà."); 
+    return;
+  }
+
+  if (form.name && form.manager) {
+    if (editIndex !== null) {
+      const updatedData = { ...form, active: departments[editIndex].active };
+      await UpdateDepartement(departments[editIndex], updatedData, form.name);
+      const updatedDepartments = [...departments];
+      updatedDepartments[editIndex] = updatedData;
+      setDepartments(updatedDepartments);
+      setEditIndex(null);
+    } else {
+      await NewDepartement({ ...form, active: true });
+      setDepartments([...departments, { ...form, active: true }]);
     }
-  };
+    setForm({ name: "", manager: "" });
+  }
+};
 
   const deleteDepartment = async (index) => {
     await DeleteDepartement(departments[index]);

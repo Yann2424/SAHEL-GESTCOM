@@ -17,19 +17,26 @@ function BudgetPage() {
   const [editIndex, setEditIndex] = useState(null);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (form.departement && form.responsable && form.montant && form.date) {
-      if (editIndex !== null) {
-        const updatedBudgets = [...budgets];
-        updatedBudgets[editIndex] = { ...form };
-        setBudgets(updatedBudgets);
-        setEditIndex(null);
-      } else {
-        setBudgets([...budgets, { ...form }]);
-      }
-      setForm({ departement: "", responsable: "", montant: "", date: "" });
+  e.preventDefault();
+  const budgetExists = budgets.some(b => b.departement === form.departement);
+
+  if (budgetExists) {
+    alert("Un budget pour ce département existe déjà."); 
+    return;
+  }
+
+  if (form.departement && form.responsable && form.montant && form.date) {
+    if (editIndex !== null) {
+      const updatedBudgets = [...budgets];
+      updatedBudgets[editIndex] = { ...form };
+      setBudgets(updatedBudgets);
+      setEditIndex(null);
+    } else {
+      setBudgets([...budgets, { ...form }]);
     }
-  };
+    setForm({ departement: "", responsable: "", montant: "", date: "" });
+  }
+};
 
   const editBudget = (index) => {
     setForm({ departement: budgets[index].departement, responsable: budgets[index].responsable, montant: budgets[index].montant, date: budgets[index].date });

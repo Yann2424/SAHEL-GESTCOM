@@ -170,7 +170,7 @@ body {
 .add-user-section {
   margin-top: 20px;
   display: flex;
-  justify-content: center; /* Centre horizontalement */
+  justify-content: center; 
 }
 
 .add-user-section button {
@@ -205,7 +205,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     width: 300px;
-    position: relative; /* Pour positionner le bouton de fermeture */
+    position: relative; 
 }
 
 .close-button {
@@ -216,11 +216,11 @@ body {
     border: none;
     font-size: 20px;
     cursor: pointer;
-    color: #0b3d91; /* Couleur de la croix */
+    color: #0b3d91; 
 }
 
 .close-button:hover {
-    color: #f29544; /* Couleur au survol */
+    color: #f29544; 
 }
 
 .modal input {
@@ -244,4 +244,78 @@ body {
 
 .bt:hover{
   background: #f29544;
+}
+
+.stats-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 180px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.stat-card.user {
+  border-left: 5px solid #0B3D91;
+}
+
+.stat-card.departement {
+  border-left: 5px solid #F29544;
+}
+
+.stat-card.budget {
+  border-left: 5px solid #2ecc71;
+}
+
+.stat-card.rapport {
+  border-left: 5px solid #9b59b6;
+}
+
+.stat-card.depense {
+  border-left: 5px solid #e74c3c;
+}
+
+.stat-card h3 {
+  margin: 5px 0;
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.charts-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px; 
+}
+
+.chart-wrapper {
+  flex: 1; 
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-top: 25px;
 }

@@ -1,14 +1,7 @@
-import React, { useState } from "react";
-import "../Vue/Departement.css"; 
-import {
-  FaTachometerAlt,
-  FaUsers,
-  FaBuilding,
-  FaMoneyBillWave,
-  FaChartLine,
-  FaSearch,
-  FaEdit,
-} from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import "../Administrateur/Departement.css"; 
+import { FaEdit } from "react-icons/fa";
+import { NewBudget, GetBudget, UpdatedBudget } from "../../Modules/Budget/Budget_firebase";
 
 function BudgetPage() {
   const [budgets, setBudgets] = useState([]);
@@ -16,35 +9,47 @@ function BudgetPage() {
   const [form, setForm] = useState({ departement: "", responsable: "", montant: "", date: "" });
   const [editIndex, setEditIndex] = useState(null);
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
-  const budgetExists = budgets.some(b => b.departement === form.departement);
+  useEffect(() => {
+    const fetchBudgets = async () => {
+      const data = await GetBudget();
+      setBudgets(data);
+    };
+    fetchBudgets();
+  }, []);
 
-  if (budgetExists) {
-    alert("Un budget pour ce département existe déjà."); 
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (form.departement && form.responsable && form.montant && form.date) {
+    if (!form.departement || !form.responsable || !form.montant || !form.date) {
+      alert("Veuillez remplir tous les champs");
+      return;
+    }
+
     if (editIndex !== null) {
+      const oldBudget = budgets[editIndex];
+      await UpdatedBudget(oldBudget, form, `${form.responsable}_${form.departement}`);
+
       const updatedBudgets = [...budgets];
-      updatedBudgets[editIndex] = { ...form };
+      updatedBudgets[editIndex] = form;
       setBudgets(updatedBudgets);
+
       setEditIndex(null);
     } else {
-      setBudgets([...budgets, { ...form }]);
+      await NewBudget(form);
+
+      setBudgets([...budgets, form]);
     }
+
     setForm({ departement: "", responsable: "", montant: "", date: "" });
-  }
-};
+  };
 
   const editBudget = (index) => {
-    setForm({ departement: budgets[index].departement, responsable: budgets[index].responsable, montant: budgets[index].montant, date: budgets[index].date });
+    setForm(budgets[index]);
     setEditIndex(index);
   };
 
   const filteredBudgets = budgets.filter((b) =>
-    b.departement.toLowerCase().includes(search.toLowerCase())
+    b.departement?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -54,7 +59,7 @@ function BudgetPage() {
           <h2>Gestion des budgets</h2><br />
           
           <form onSubmit={handleSubmit} className="card">
-            <h3>Ajouter un budget</h3><br />
+            <h3>{editIndex !== null ? "Modifier un budget" : "Ajouter un budget"}</h3><br />
             <input
               type="text"
               placeholder="Nom du département"
@@ -68,7 +73,7 @@ function BudgetPage() {
               onChange={(e) => setForm({ ...form, responsable: e.target.value })}
             />
             <input
-              type="text"
+              type="number"
               placeholder="Montant"
               value={form.montant}
               onChange={(e) => setForm({ ...form, montant: e.target.value })}
@@ -79,11 +84,12 @@ function BudgetPage() {
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
             />
-            <button type="submit" className="btn">Ajouter</button>
+            <button type="submit" className="btn">
+              {editIndex !== null ? "Modifier" : "Ajouter"}
+            </button>
           </form><br />
 
           <div className="search-container">
-            {/* <FaSearch className="search-icon" /> */}
             <input
               type="text"
               placeholder="Rechercher un budget..."
@@ -108,7 +114,7 @@ function BudgetPage() {
                 <tr key={i}>
                   <td>{b.departement}</td>
                   <td>{b.responsable}</td>
-                  <td>{b.montant}</td>
+                  <td>{b.montant} F</td>
                   <td>{b.date}</td>
                   <td>
                     <FaEdit className="icon-edit" onClick={() => editBudget(i)} />

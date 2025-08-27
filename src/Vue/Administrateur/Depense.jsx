@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
 	FaEdit,
 } from "react-icons/fa";
-import "../Vue/Departement.css";
+import "../Administrateur/Departement.css";
 
 function DepensePage() {
 	const [depenses, setDepenses] = useState([]);

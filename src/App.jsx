@@ -1,9 +1,8 @@
-import Dash from './Vue/Dash'
-import { AppProvider } from "./Vue/AppContext";
+import Dash from './Vue/Administrateur/Dash'
+import { AppProvider } from "./Vue/Administrateur/AppProvider";
 
 
 import Connexion from './Modules/Auth/Connexion'
-
 
 function App (){
 

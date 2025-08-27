@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "firebase/firestore"
 import { db } from "../firebase/firebase";
 
 
@@ -54,7 +54,7 @@ export const UpdatedBudget = async (datas,newDatas,newName) =>{
       console.log('ce Budget n"existe pas');
       return
     }
-    // cree un nouveau document
+    
     const newDocRef = doc(db,'Budgets',newName)
     await setDoc(newDocRef,newDatas)
 

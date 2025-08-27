@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../Vue/Utilisateur.css"; // On réutilise ton CSS Utilisateur
+import "../Administrateur/Utilisateur.css"; 
 import {
   FaFileAlt,
   FaUserTie,
@@ -10,7 +10,6 @@ import {
   FaArchive,
 } from "react-icons/fa";
 
-// Liste des rapports fictifs
 const initialReports = [
   {
     id: 1,
@@ -100,7 +99,6 @@ function Rapport() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [search, setSearch] = useState("");
 
-  // 🔎 Filtrage des rapports sur la base du nom du responsable ou du motif
   const filteredReports = reports.filter(
     (r) =>
       r.responsable.toLowerCase().includes(search.toLowerCase()) ||
@@ -115,7 +113,7 @@ function Rapport() {
   return (
     <div className="dashboard">
       <main className="main">
-        {/* SECTION LISTE DES RAPPORTS */}
+        
         <div className="user-list-section">
           <div className="search-container">
             <input

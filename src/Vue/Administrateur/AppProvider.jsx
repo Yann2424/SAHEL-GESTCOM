@@ -1,7 +1,7 @@
-import React, { createContext, useMemo, useState } from "react";
 
-const AppContext = createContext();
- 
+import React, { useMemo, useState } from "react";
+import { AppContext } from "../Administrateur/AppContext"; 
+
 export const AppProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -27,4 +27,3 @@ export const AppProvider = ({ children }) => {
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-export default AppContext;

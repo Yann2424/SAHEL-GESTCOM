@@ -319,3 +319,45 @@ body {
   padding: 20px;
   margin-top: 25px;
 }
+
+.pie-slice.color-0 {
+  fill: #0b3d91; 
+}
+.pie-slice.color-1 {
+  fill: #f29544; 
+}
+.pie-slice.color-2 {
+  fill: #2ecc71; 
+}
+.pie-slice.color-3 {
+  fill: #9b59b6; 
+}
+.pie-slice.color-4 {
+  fill: #e74c3c; 
+}
+
+.line-depense {
+  stroke: #e74c3c; 
+  stroke-width: 3;
+}
+
+.recharts-tooltip-wrapper {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #ddd !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+  font-size: 13px;
+  color: #333;
+}
+
+.recharts-legend-item text {
+  fill: #0b3d91 !important;
+  font-weight: bold;
+}
+
+.chart-wrapper h3 {
+  color: #0b3d91;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #f29544;
+  padding-bottom: 5px;
+}

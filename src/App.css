@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-=======
-body {
+/* body {
     margin: 0;
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #4c6ef5, #2a94f9);
@@ -9,7 +7,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-}
+} */
 
 .container {
     background: rgba(255, 255, 255, 0.1);
@@ -97,4 +95,4 @@ input {
     color: red;
     font-size: 12px;
 }
->>>>>>> 8bfeb56cb5ceecd22b81c92c311ebb103cfba7f2
+

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { FaEdit } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import "../Administrateur/Departement.css";
+import { NewDepense, GetDepense, UpdateDepense, DeleteDepense } from "../../Modules/Depense/Depense_firebase"; 
 
 function DepensePage() {
   const [depenses, setDepenses] = useState([]);
@@ -10,40 +11,47 @@ function DepensePage() {
     responsable: "",
     type: "",
     motif: "",
-    montant: "", 
+    montant: "",
   });
-  const [editIndex, setEditIndex] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    async function fetchDepenses() {
+      const data = await GetDepense();
+      setDepenses(data);
+    }
+    fetchDepenses();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (
-      form.departement &&
-      form.responsable &&
-      form.type &&
-      form.motif &&
-      form.montant
-    ) {
-      if (editIndex !== null) {
-        const updatedDepenses = [...depenses];
-        updatedDepenses[editIndex] = { ...form, montant: Number(form.montant) };
+    if (form.departement && form.responsable && form.type && form.motif && form.montant) {
+      if (editId) {
+        
+        await UpdateDepense(editId, { ...form, montant: Number(form.montant) });
+        const updatedDepenses = depenses.map((d) =>
+          d.id === editId ? { ...d, ...form, montant: Number(form.montant) } : d
+        );
         setDepenses(updatedDepenses);
-        setEditIndex(null);
+        setEditId(null);
       } else {
-        setDepenses([...depenses, { ...form, montant: Number(form.montant) }]);
+        // Ajout
+        const newDep = { ...form, montant: Number(form.montant) };
+        await NewDepense(newDep);
+        setDepenses([...depenses, newDep]);
       }
       setForm({ departement: "", responsable: "", type: "", motif: "", montant: "" });
     }
   };
 
-  const editDepense = (index) => {
-    setForm({
-      departement: depenses[index].departement,
-      responsable: depenses[index].responsable,
-      type: depenses[index].type,
-      motif: depenses[index].motif,
-      montant: depenses[index].montant,
-    });
-    setEditIndex(index);
+  const editDepense = (dep) => {
+    setForm(dep);
+    setEditId(dep.id);
+  };
+
+  const deleteDepense = async (dep) => {
+    await DeleteDepense(dep.id);
+    setDepenses(depenses.filter((d) => d.id !== dep.id));
   };
 
   const filteredDepenses = depenses.filter((d) =>
@@ -58,23 +66,19 @@ function DepensePage() {
           <br />
 
           <form onSubmit={handleSubmit} className="card">
-            <h3>Ajouter une dépense</h3>
+            <h3>{editId ? "Modifier une dépense" : "Ajouter une dépense"}</h3>
             <br />
             <input
               type="text"
               placeholder="Nom du département"
               value={form.departement}
-              onChange={(e) =>
-                setForm({ ...form, departement: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, departement: e.target.value })}
             />
             <input
               type="text"
               placeholder="Nom du responsable"
               value={form.responsable}
-              onChange={(e) =>
-                setForm({ ...form, responsable: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, responsable: e.target.value })}
             />
             <input
               type="text"
@@ -95,7 +99,7 @@ function DepensePage() {
               onChange={(e) => setForm({ ...form, montant: e.target.value })}
             />
             <button type="submit" className="btn">
-              {editIndex !== null ? "Modifier" : "Ajouter"}
+              {editId ? "Modifier" : "Ajouter"}
             </button>
           </form>
           <br />
@@ -117,7 +121,7 @@ function DepensePage() {
                 <th>Responsable</th>
                 <th>Type</th>
                 <th>Motif</th>
-                <th>Montant</th> 
+                <th>Montant</th>
                 <th>Options</th>
               </tr>
             </thead>
@@ -128,11 +132,13 @@ function DepensePage() {
                   <td>{d.responsable}</td>
                   <td>{d.type}</td>
                   <td>{d.motif}</td>
-                  <td>{Number(d.montant).toLocaleString()} F</td> 
+                  <td>{Number(d.montant).toLocaleString()} F</td>
                   <td>
-                    <FaEdit
-                      className="icon-edit"
-                      onClick={() => editDepense(i)}
+                    <FaEdit className="icon-edit" onClick={() => editDepense(d)} />
+                    <FaTrash
+                      className="icon-delete"
+                      onClick={() => deleteDepense(d)}
+                      style={{ marginLeft: "8px", color: "red", cursor: "pointer" }}
                     />
                   </td>
                 </tr>

@@ -1,18 +1,17 @@
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs,updateDoc ,addDoc} from 'firebase/firestore'
 import { db } from '../firebase/firebase'
 
 
 
 export const  NewDepense =async (datas)=>{
   try{
-    const docRef = doc (collection(db,'Depenses'),did)
-    await setDoc (docRef,datas)
+     await addDoc (collection(db,'Depenses'),datas)
     console.log('depense ajouter depuis !')
     
   }catch(err){
     console.log('erreur d"envoi',err)
   }
-}
+} 
 
 export const GetDepense = async()=>{
   try{
@@ -28,13 +27,13 @@ export const GetDepense = async()=>{
   }
 }
 
-export const UpdateDepense = async (datas,newDatas) =>{
+export const UpdateDepense = async (datas,newDatas,) =>{
   try{
     if (!datas) {
       console.error("Ancien Depense invalide:", datas);
       return;
     }
-    const docRef = doc(db,'Depenses',did)
+    const docRef = doc(db,'Depenses',)
       await updateDoc(docRef,newDatas)
     
     console.log('Utilisateurs modifier !');
@@ -46,7 +45,7 @@ export const UpdateDepense = async (datas,newDatas) =>{
 
 export const DeleteDepense = async ()=>{
   try{
-    const docRef = doc(db,'Depenses',did)
+    const docRef = doc(db,'Depenses',)
     const docSnapshot = await getDoc(docRef)
     if(!docSnapshot.exists()){
       console.log('cette Depense n"existe pas');

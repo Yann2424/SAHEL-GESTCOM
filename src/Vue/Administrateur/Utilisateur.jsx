@@ -120,22 +120,8 @@ function Utilisateur() {
 								<h3>
 									<FaFolderOpen /> Département
 								</h3>
-								<select
-									value={selectedUser.department}
-									onChange={(e) =>
-										handleUpdateUser({
-											...selectedUser,
-											department: e.target.value,
-										})
-									}
-									style={{ padding: "8px", borderRadius: "4px", width: "100%" }}
-								>
-									{departments.map((dep, i) => (
-										<option key={i} value={dep}>
-											{dep}
-										</option>
-									))}
-								</select>
+								<p>{selectedUser.department}</p>{" "}
+								
 							</div>
 
 							<div className="card">

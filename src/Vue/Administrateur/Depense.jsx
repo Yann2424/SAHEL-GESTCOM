@@ -35,7 +35,7 @@ function DepensePage() {
         setDepenses(updatedDepenses);
         setEditId(null);
       } else {
-        // Ajout
+        
         const newDep = { ...form, montant: Number(form.montant) };
         await NewDepense(newDep);
         setDepenses([...depenses, newDep]);
@@ -62,8 +62,6 @@ function DepensePage() {
     <div className="dashboard">
       <main className="main">
         <div className="depense-page">
-          <h2>Gestion des Dépenses</h2>
-          <br />
 
           <form onSubmit={handleSubmit} className="card">
             <h3>{editId ? "Modifier une dépense" : "Ajouter une dépense"}</h3>

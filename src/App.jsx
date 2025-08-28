@@ -1,17 +1,16 @@
 import Dash from './Vue/Administrateur/Dash'
 import { AppProvider } from "./Vue/Administrateur/AppProvider";
-
-
-import Connexion from './Modules/Auth/Connexion'
+import DashbordResponsable from "../../SAHEL-GESTCOM/src/Vue/Responsable/DashbordResponsable";
 
 function App (){
 
   return(
     <>
-      <AppProvider>
+      {/* <AppProvider>
       <Dash />
-    </AppProvider>
-      
+    </AppProvider> */}
+    
+    <DashbordResponsable />
     </>
   )
 }

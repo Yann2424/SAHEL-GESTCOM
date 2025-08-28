@@ -379,3 +379,21 @@ body {
   border-bottom: 2px solid #f29544;
   padding-bottom: 5px;
 }
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap; 
+}

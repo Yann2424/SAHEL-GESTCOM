@@ -17,6 +17,7 @@ import {
 	GetDepartement,
 	UpdateDepartement,
 	DeleteDepartement,
+	
 } from "../../Modules/Departement/Departement_firebase.jsx.jsx"; 
 
 function DepartmentsPage() {

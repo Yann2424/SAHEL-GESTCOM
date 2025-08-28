@@ -14,12 +14,14 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "../Responsable/DashbordResponsable.css";
+import { GetDepartementFUser } from "../../Modules/UtilisateurR/Departement/DepartementRes";
+import {
+	DepenseFUser,
+	GetDepenseFUser,
+	DeleteDepenseFUser,
+} from "../../Modules/UtilisateurR/Depense/DepenseRes";
 
-const RESPONSABLE_NAME = "Responsable: Jean Dupont";
-const ASSIGNED_DEPARTMENT = "Informatique";
-const ASSIGNED_BUDGET = 2_500_000;
-
-export default function DashboardResponsable() {
+export default function DashboardResponsable({ currentUser }) {
 	const [activeTab, setActiveTab] = useState("departement");
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -30,23 +32,31 @@ export default function DashboardResponsable() {
 		type: "",
 	});
 
-	const [depenses, setDepenses] = useState(() => {
-		const cached = localStorage.getItem("depenses");
-		return cached ? JSON.parse(cached) : [];
-	});
-
-	const [rapport, setRapport] = useState(
-		() => localStorage.getItem("rapport") || ""
-	);
+	const [depenses, setDepenses] = useState([]);
+	const [rapport, setRapport] = useState("");
 	const [adminEmail, setAdminEmail] = useState("admin@entreprise.com");
 
-	useEffect(() => {
-		localStorage.setItem("depenses", JSON.stringify(depenses));
-	}, [depenses]);
+	const [assignedDepartment, setAssignedDepartment] = useState("");
+	const [responsableName, setResponsableName] = useState("");
 
+	const ASSIGNED_BUDGET = 2_500_000;
+
+	// --- Récupérer les infos utilisateur et ses dépenses ---
 	useEffect(() => {
-		localStorage.setItem("rapport", rapport);
-	}, [rapport]);
+		if (!currentUser?.email) return;
+		const fetchUserData = async () => {
+			const departement = await GetDepartementFUser({
+				email: currentUser.email,
+			});
+			setAssignedDepartment(departement || "Non attribué");
+			setResponsableName(currentUser.displayName || "Nom non défini");
+
+			const userData = await GetDepenseFUser({ email: currentUser.email });
+			setDepenses(userData?.expenses || []);
+			setRapport(userData?.rapport || "");
+		};
+		fetchUserData();
+	}, [currentUser]);
 
 	const totalDepenses = useMemo(
 		() => depenses.reduce((sum, d) => sum + Number(d.montant || 0), 0),
@@ -55,38 +65,52 @@ export default function DashboardResponsable() {
 	const resteBudget = Math.max(ASSIGNED_BUDGET - totalDepenses, 0);
 	const progressPct = Math.min((totalDepenses / ASSIGNED_BUDGET) * 100, 100);
 
-	function handleAddDepense(e) {
+	// --- Ajouter une dépense ---
+	const handleAddDepense = async (e) => {
 		e.preventDefault();
-		const { montant, date, motif } = depenseForm;
+		const { montant, date, motif, type } = depenseForm;
 		if (!montant || !date || !motif)
 			return alert("Veuillez remplir tous les champs.");
 		if (Number(montant) <= 0)
 			return alert("Le montant doit être supérieur à 0.");
-		const item = {
-			id: crypto.randomUUID(),
+
+		const depense = {
 			montant: Number(montant),
 			date,
 			motif,
-			type: depenseForm.type,
+			type,
+			email: currentUser.email,
 		};
-		setDepenses((prev) => [item, ...prev]);
-		setDepenseForm({ montant: "", date: "", motif: "" });
-	}
 
-	function handleDelete(id) {
-		setDepenses((prev) => prev.filter((d) => d.id !== id));
-	}
+		try {
+			await DepenseFUser(depense);
+			setDepenses((prev) => [depense, ...prev]);
+			setDepenseForm({ montant: "", date: "", motif: "", type: "" });
+		} catch (err) {
+			console.log("Erreur ajout dépense:", err);
+		}
+	};
 
-	function exportPDF() {
+	// --- Supprimer une dépense ---
+	const handleDelete = async (depense) => {
+		try {
+			await DeleteDepenseFUser({ email: currentUser.email }, depense.id);
+			setDepenses((prev) => prev.filter((d) => d.id !== depense.id));
+		} catch (err) {
+			console.log("Erreur suppression dépense:", err);
+		}
+	};
+
+	// --- Export PDF ---
+	const exportPDF = () => {
 		const doc = new jsPDF({ unit: "pt", format: "a4" });
-
-		const title = `Rapport financier – Département ${ASSIGNED_DEPARTMENT}`;
+		const title = `Rapport financier – Département ${assignedDepartment}`;
 		const dateStr = new Date().toLocaleDateString();
 
 		doc.setFontSize(18);
 		doc.text(title, 40, 40);
 		doc.setFontSize(11);
-		doc.text(`${RESPONSABLE_NAME} | Date: ${dateStr}`, 40, 62);
+		doc.text(`${responsableName} | Date: ${dateStr}`, 40, 62);
 		doc.text(`Budget attribué: ${formatMoney(ASSIGNED_BUDGET)} XAF`, 40, 80);
 		doc.text(`Total dépenses: ${formatMoney(totalDepenses)} XAF`, 40, 96);
 		doc.text(`Reste: ${formatMoney(resteBudget)} XAF`, 40, 112);
@@ -105,24 +129,21 @@ export default function DashboardResponsable() {
 			headStyles: { fillColor: [34, 197, 94] },
 		});
 
-		// Rapport texte
 		const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : 150;
 		doc.setFontSize(13);
 		doc.text("Rapport du responsable:", 40, finalY);
 		doc.setFontSize(11);
-
-		// Découper le texte du rapport en lignes qui tiennent dans la page
 		const lines = doc.splitTextToSize(rapport || "(Aucun rapport saisi)", 515);
 		doc.text(lines, 40, finalY + 18);
 
 		doc.save(
-			`Rapport_${ASSIGNED_DEPARTMENT}_${dateStr.replaceAll("/", "-")}.pdf`
+			`Rapport_${assignedDepartment}_${dateStr.replaceAll("/", "-")}.pdf`
 		);
-	}
+	};
 
-	function openEmailClient() {
+	const openEmailClient = () => {
 		const subject = encodeURIComponent(
-			`Rapport financier – ${ASSIGNED_DEPARTMENT}`
+			`Rapport financier – ${assignedDepartment}`
 		);
 		const body = encodeURIComponent(
 			`Bonjour,\n\nVeuillez trouver ci-joint le rapport financier.\n\nRésumé:\n- Budget: ${formatMoney(
@@ -131,10 +152,10 @@ export default function DashboardResponsable() {
 				totalDepenses
 			)} XAF\n- Reste: ${formatMoney(
 				resteBudget
-			)} XAF\n\n${rapport}\n\nCordialement,\n${RESPONSABLE_NAME}`
+			)} XAF\n\n${rapport}\n\nCordialement,\n${responsableName}`
 		);
 		window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
-	}
+	};
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex">
@@ -201,18 +222,19 @@ export default function DashboardResponsable() {
 			<main className="flex-1 p-6">
 				<Header />
 
+				{/* --- Tabs --- */}
 				{activeTab === "departement" && (
 					<section className="fade-in">
 						<Cards>
 							<Card title="Département assigné">
 								<div className="text-2xl font-semibold">
-									{ASSIGNED_DEPARTMENT}
+									{assignedDepartment}
 								</div>
 							</Card>
 							<Card title="Responsable">
-								<div className="text-2xl font-semibold">{RESPONSABLE_NAME}</div>
+								<div className="text-2xl font-semibold">{responsableName}</div>
 							</Card>
-						</Cards>
+						</Cards><br />
 
 						<div className="panel">
 							<h3 className="panel-title">Consignes</h3>
@@ -245,7 +267,7 @@ export default function DashboardResponsable() {
 									<span className="text-base font-medium">XAF</span>
 								</div>
 							</Card>
-						</Cards>
+						</Cards><br />
 
 						<div className="panel">
 							<h3 className="panel-title">Progression du budget</h3>
@@ -264,7 +286,7 @@ export default function DashboardResponsable() {
 
 				{activeTab === "depense" && (
 					<section className="fade-in">
-						{/* Formulaire d'ajout de dépense */}
+						{/* Formulaire et tableau */}
 						<div className="panel">
 							<h3 className="panel-title">Enregistrer une dépense</h3>
 							<form
@@ -326,13 +348,12 @@ export default function DashboardResponsable() {
 										<option value="">Sélectionnez un type</option>
 										<option value="Fournitures">Fournitures</option>
 										<option value="Transport">Transport</option>
-                                        <option value="Logement">Logement</option>
-                                        <option value="Restaurant">Restaurant</option>
-                                        <option value="Technicien">Technicien</option>
+										<option value="Logement">Logement</option>
+										<option value="Restaurant">Restaurant</option>
+										<option value="Technicien">Technicien</option>
 										<option value="Autre">Autre</option>
 									</select>
 								</div>
-
 								<div className="md:col-span-12 flex items-end">
 									<button type="submit" className="btn-primary">
 										<FaPlus className="mr-2" /> Ajouter
@@ -341,7 +362,6 @@ export default function DashboardResponsable() {
 							</form>
 						</div>
 
-						{/* Tableau des dépenses */}
 						<div className="panel mt-4">
 							<h3 className="panel-title">Historique des dépenses</h3>
 							<div className="table-wrap">
@@ -363,8 +383,8 @@ export default function DashboardResponsable() {
 												</td>
 											</tr>
 										)}
-										{depenses.map((d) => (
-											<tr key={d.id}>
+										{depenses.map((d, idx) => (
+											<tr key={idx}>
 												<td>{new Date(d.date).toLocaleDateString()}</td>
 												<td>{d.motif}</td>
 												<td>{d.type}</td>
@@ -373,7 +393,7 @@ export default function DashboardResponsable() {
 													<button
 														className="icon-btn danger"
 														title="Supprimer"
-														onClick={() => handleDelete(d.id)}
+														onClick={() => handleDelete(d)}
 													>
 														<FaTrash />
 													</button>
@@ -381,7 +401,6 @@ export default function DashboardResponsable() {
 											</tr>
 										))}
 									</tbody>
-
 									{depenses.length > 0 && (
 										<tfoot>
 											<tr>
@@ -398,29 +417,6 @@ export default function DashboardResponsable() {
 								</table>
 							</div>
 						</div>
-
-						{/* Barre de progression du budget */}
-						<div className="panel mt-4">
-							<h3 className="panel-title">Consommation du budget</h3>
-							<div className="progress">
-								<div
-									className="progress-bar"
-									style={{
-										width: `${progressPct}%`,
-										backgroundColor:
-											progressPct > 80
-												? "#ef4444" 
-												: progressPct > 50
-												? "#facc15" 
-												: "#f97316", 
-									}}
-								/>
-							</div>
-
-							<div className="mt-2 text-sm text-gray-600">
-								{((totalDepenses / ASSIGNED_BUDGET) * 100).toFixed(1)}% consommé
-							</div>
-						</div>
 					</section>
 				)}
 
@@ -431,11 +427,10 @@ export default function DashboardResponsable() {
 							<textarea
 								className="textarea"
 								rows={10}
-								placeholder="Saisissez ici votre rapport (objectifs, dépenses majeures, écarts, recommandations, etc.)."
+								placeholder="Saisissez ici votre rapport"
 								value={rapport}
 								onChange={(e) => setRapport(e.target.value)}
 							/>
-
 							<div className="grid md:grid-cols-2 gap-3 mt-3">
 								<div>
 									<label className="label">Email de l'administrateur</label>
@@ -465,12 +460,10 @@ export default function DashboardResponsable() {
 					</section>
 				)}
 			</main>
-
-			{/* Styles locaux
-      <style>{css}</style> */}
 		</div>
 	);
 }
+
 
 function Header() {
 	return (
@@ -478,11 +471,10 @@ function Header() {
 			<div>
 				<h2 className="text-2xl font-bold">Espace Responsable</h2>
 				<p className="text-gray-600 text-sm">
-					Gérez votre département, suivez le budget, enregistrez les dépenses et
-					rédigez vos rapports.
+					Gérez votre département et vos dépenses
 				</p>
 			</div>
-			<button className="btn-ghost">
+			<button className="btn-logout hover:bg-red-600 transition-colors duration-300 px-4 py-2 rounded flex items-center">
 				<FaSignOutAlt className="mr-2" />
 				Déconnexion
 			</button>
@@ -492,43 +484,30 @@ function Header() {
 
 function NavItem({ icon, label, active, onClick, expanded }) {
 	return (
-		<button className={`nav-item ${active ? "active" : ""}`} onClick={onClick}>
-			<span className="nav-icon">{icon}</span>
-			<span
-				className={`nav-label ${
-					expanded ? "opacity-100" : "opacity-0 pointer-events-none"
-				}`}
-			>
-				{label}
-			</span>
+		<button
+			className={`nav-item ${active ? "active" : ""}`}
+			onClick={onClick}
+			title={label}
+		>
+			{icon}
+			{expanded && <span className="ml-2">{label}</span>}
 		</button>
 	);
 }
 
-function Cards({ children }) {
-	return (
-		<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-			{children}
-		</div>
-	);
-}
-
-function Card({ title, subtitle, children }) {
+function Card({ title, children }) {
 	return (
 		<div className="card">
-			<div className="card-head">
-				<h4 className="card-title">{title}</h4>
-				{subtitle && <span className="card-subtitle">{subtitle}</span>}
-			</div>
-			<div className="card-body">{children}</div>
+			<h4 className="card-title">{title}</h4>
+			<div className="card-content">{children}</div>
 		</div>
 	);
 }
 
-function formatMoney(n) {
-	try {
-		return new Intl.NumberFormat("fr-FR").format(Number(n));
-	} catch {
-		return `${n}`;
-	}
+function Cards({ children }) {
+	return <div className="cards grid md:grid-cols-3 gap-4">{children}</div>;
+}
+
+function formatMoney(amount) {
+	return amount?.toLocaleString("fr-FR") || "0";
 }

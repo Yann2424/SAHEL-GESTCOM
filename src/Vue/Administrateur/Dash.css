@@ -1,0 +1,242 @@
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background-color: #f5f6fa;
+  color: #333;
+}
+
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  background: #0B3D91; 
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.sidebar .logo-container {
+  padding: 20px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.sidebar nav ul li {
+  padding: 15px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.sidebar nav ul li:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left: 4px solid #f97316; 
+}
+
+.main {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.1);
+}
+
+.stat-card .stat-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.stat-card.user { color: #0B3D91; }        
+.stat-card.departement { color: #f97316; }
+.stat-card.budget { color: #1d4ed8; }      
+.stat-card.rapport { color: #6b7280; }    
+.stat-card.depense { color: #e74c3c; }    
+
+.charts-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.chart-wrapper {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.chart-wrapper h3 {
+  margin-bottom: 20px;
+  color: #0B3D91;
+  font-weight: 600;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+table th, table td {
+  padding: 12px 15px;
+  text-align: left;
+}
+
+table th {
+  background: #0B3D91;
+  color: #fff;
+  font-weight: 600;
+}
+
+table td {
+  border-bottom: 1px solid #eee;
+}
+
+table tbody tr:hover {
+  background: rgba(247, 115, 22, 0.1); 
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+}
+
+input.input, select.input, textarea.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+input.input:focus, select.input:focus, textarea.textarea:focus {
+  border-color: #0B3D91;
+  box-shadow: 0 0 0 2px rgba(11,61,145,0.2);
+}
+
+textarea.textarea {
+  resize: none; 
+}
+
+button.btn-primary {
+  background: #f97316; 
+  color: #fff;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button.btn-primary:hover {
+  background: #ea580c;
+}
+
+button.btn-secondary {
+  background: #0B3D91; /* bleu */
+  color: #fff;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button.btn-secondary:hover {
+  background: #08306b;
+}
+
+button.icon-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: 0.2s;
+}
+
+button.icon-btn.danger {
+  color: #e74c3c;
+}
+
+button.icon-btn.danger:hover {
+  color: #b91c1c;
+}
+
+@media (max-width: 1024px) {
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .sidebar nav ul {
+    display: flex;
+    flex-direction: row;
+  }
+  .sidebar nav ul li {
+    flex: 1;
+    justify-content: center;
+  }
+  .charts-container {
+    gap: 20px;
+  }
+}

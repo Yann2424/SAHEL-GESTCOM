@@ -64,7 +64,9 @@ export const GetDepenseFUser = async (datas) => {
     }
 
     const userDoc = querySnapshot.docs[0];
-    return { id: userDoc.id, ...userDoc.data() };
+    return { id: userDoc.id, 
+      expenses : userDoc.data().expense || [] 
+    };
   } catch (err) {
     console.log(" Erreur lors de la récupération", err);
     return null;

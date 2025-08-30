@@ -13,11 +13,11 @@ export const GetDepartementFUser = async (datas) => {
     
     if (querySnapshot.empty) {
       console.log("L'utilisateur n'existe pas");
-      return [];
+      return null;
     }
 
     const userDoc = querySnapshot.docs[0];
-    return userDoc.data().departement || [];
+    return userDoc.data().departement || null;
   } catch (err) {
     console.log("Erreur lors de la récupération du département :", err);
     return [];

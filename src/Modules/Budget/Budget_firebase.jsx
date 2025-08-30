@@ -41,11 +41,11 @@ export const GetBudget = async()=>{
 export const UpdatedBudget = async (datas,newDatas,newName) =>{
   try{
     if (!datas?.departement) {
-      console.error("Ancien nom de département invalide:", datas);
+      console.error("Ancien Budget invalide:", datas);
       return;
     }
     if (!newName) {
-      console.error("Nouveau nom de département invalide:", newName);
+      console.error("Nouveau Budget invalide:", newName);
       return;
     }
     const docRef = doc(db,'Budgets',`${datas.responsable }_${datas.departement}`)
@@ -59,7 +59,7 @@ export const UpdatedBudget = async (datas,newDatas,newName) =>{
     await setDoc(newDocRef,newDatas)
 
     await deleteDoc(docRef)
-    console.log('departement modifier !');
+    console.log('Budget modifier !');
     
   } catch(err){
     console.log('erreur lors de l/update :',err)

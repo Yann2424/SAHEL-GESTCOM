@@ -2,49 +2,74 @@
 import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
-export const NewRapportFUser = async (datas)=>{
-    try{
-        const docRef = doc(collection(db,"Rapports"),datas.email)
-        await setDoc(docRef,datas)
-        console.log("rapports ajouter",datas)
+import { collection, query, where, getDocs, doc, addDoc } from "firebase/firestore";
+import { db } from "../firebase/firebase"; // adapte le chemin selon ton projet
 
-        const q = query(
-            collection(db, "Utilisateurs"),
-            where("email", "==", datas.email)
-        )
+export const NewRapportFUser = async (datas) => {
+  try {
+    // Cherche l'utilisateur par email
+    const q = query(
+      collection(db, "Utilisateurs"),
+      where("email", "==", datas.email)
+    );
     const querySnapshot = await getDocs(q);
 
-    if(!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0]
-        const userRef = doc(db, "Utilisateurs", userDoc.id)
-        await updateDoc(userRef, { rapport: datas.rapport })
-        console.log("rapports ajouter a l'utilisateur:",userDoc.id)
-    }else{
-        console.log("aucun rapport ajouter");
+    if (querySnapshot.empty) {
+      console.log("Aucun utilisateur trouvé pour ce rapport");
+      return;
     }
-    }catch(err){
-        console.log("erreur lors de l'ajout du rapport",err)
-    }
-}
 
-export const GetRapportFUser = async (datas)=>{
-    try{
-        const q = query(
-            collection(db, "Utilisateurs"),
-            where("email", "==", datas.email)
-        );
+    
+    const userDoc = querySnapshot.docs[0];
+    const userRef = doc(db, "Utilisateurs", userDoc.id);
 
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-            console.log("Rapport n'existe pas");
-            return 0
-        }
-        const rapport = querySnapshot.docs.map((doc)=>({
-            id: doc.id,
-            rapport : doc.rapport
-        }))
-    }catch(err){
-        console.log('erreur lors de la recuperation du Rapport',err)
-        return
+    
+    await addDoc(collection(userRef, "Rapports"), {
+      rapport: datas.rapport,
+      email: datas.email,
+      createdAt: new Date(), 
+    });
+    console.log("Rapport ajouté pour l'utilisateur:", userDoc.id)
+    
+    await addDoc(collection(db, "Rapports"), {
+      ...newRapport,
+      userId: userDoc.id, 
+    });
+  } catch (err) {
+    console.log("Erreur lors de l'ajout du rapport", err);
+  }
+};
+
+
+import { collection, query, where, getDocs, doc } from "firebase/firestore";
+import { db } from "../firebase/firebase";
+
+export const GetRapportsFUser = async (email) => {
+  try {
+    
+    const q = query(
+      collection(db, "Utilisateurs"),
+      where("email", "==", email)
+    );
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      console.log("Aucun utilisateur trouvé");
+      return [];
     }
-} 
+
+    const userDoc = querySnapshot.docs[0];
+    const userRef = doc(db, "Utilisateurs", userDoc.id);
+
+    
+    const rapportsSnapshot = await getDocs(collection(userRef, "Rapports"));
+
+    return rapportsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (err) {
+    console.log("Erreur lors de la récupération des rapports:", err);
+    return [];
+  }
+};

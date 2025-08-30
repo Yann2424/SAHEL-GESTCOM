@@ -49,7 +49,7 @@ export const DepenseFUser = async (datas) => {
 };
 
 
-// 🔍 Récupérer les infos + dépenses d'un utilisateur
+
 export const GetDepenseFUser = async (datas) => {
   try {
     const q = query(

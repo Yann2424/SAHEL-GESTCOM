@@ -6,13 +6,11 @@ function App (){
 
   return(
     <>
-      {<AppProvider>
+      <AppProvider>
       <Dash />
-    </AppProvider> }
+    </AppProvider>
     
-    {/**
-     * <DashbordResponsable />
-     */}
+     {/* <DashbordResponsable /> */}
     </>
   )
 }

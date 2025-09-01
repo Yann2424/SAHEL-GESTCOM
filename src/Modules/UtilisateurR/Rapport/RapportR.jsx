@@ -1,16 +1,14 @@
 
-import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
-import { collection, query, where, getDocs, doc, addDoc } from "firebase/firestore";
-import { db } from "../firebase/firebase"; // adapte le chemin selon ton projet
 
 export const NewRapportFUser = async (datas) => {
   try {
-    // Cherche l'utilisateur par email
     const q = query(
       collection(db, "Utilisateurs"),
-      where("email", "==", datas.email)
+      where("email", "==", datas.email),
+       where('role','==','responsable')
     );
     const querySnapshot = await getDocs(q);
 
@@ -24,15 +22,19 @@ export const NewRapportFUser = async (datas) => {
     const userRef = doc(db, "Utilisateurs", userDoc.id);
 
     
-    await addDoc(collection(userRef, "Rapports"), {
+    const rapportUserRef = await addDoc(collection(userRef, "Rapports"), {
       rapport: datas.rapport,
       email: datas.email,
+      statut: 'en attente',
       createdAt: new Date(), 
     });
     console.log("Rapport ajouté pour l'utilisateur:", userDoc.id)
     
     await addDoc(collection(db, "Rapports"), {
-      ...newRapport,
+      rapport : datas.rapport,
+      email: datas.email,
+      statut: 'en attente',
+      createAt: serverTimestamp(),
       userId: userDoc.id, 
     });
   } catch (err) {
@@ -40,16 +42,35 @@ export const NewRapportFUser = async (datas) => {
   }
 };
 
+export const ValidateRapport =async (rapport)=>{
+  try {
+    const  rapportUserRef = doc(db,"Utilisateurs",rapport.uid,"Rapports",rapport.id)
+    await updateDoc(rapportUserRef,{
+      statut: "valider"
+    })
+    console.log('rapport valider');
+    
+  } catch (error) {
+    console.log('erreur lors de la validation du rapport',error)
+  }
+}
+export const RefuserRapport = async (rapport)=>{
+  try {
+    const  rapportUserRef = doc(db,"Utilisateurs",rapport.uid,"Rapports",rapport.id)
+    await deleteDoc(rapportUserRef)
+    console.log('rapport refuser');
+    
+  } catch (error) {
+    console.log('erreur lors du refus du rapport',error)
+  }
+}
 
-import { collection, query, where, getDocs, doc } from "firebase/firestore";
-import { db } from "../firebase/firebase";
-
-export const GetRapportsFUser = async (email) => {
+export const GetRapportsFUser = async (datas) => {
   try {
     
     const q = query(
       collection(db, "Utilisateurs"),
-      where("email", "==", email)
+      where("email", "==", datas.email)
     );
     const querySnapshot = await getDocs(q);
 

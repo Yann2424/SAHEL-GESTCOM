@@ -6,7 +6,8 @@ export const GetDepartementFUser = async (datas) => {
   try {
     const q = query(
       collection(db, "Utilisateurs"),
-      where("email", "==", datas.email)
+      where("email", "==", datas.email),
+      // where('role','==','responsable')
     );
 
     const querySnapshot = await getDocs(q);

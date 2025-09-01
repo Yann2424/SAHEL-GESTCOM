@@ -78,6 +78,17 @@ export const DeleteDepartement = async (datas)=>{
   }
 }
 
+export const  GetNomDepartement = async ()=>{
+  try {
+    const querySnapshot = await getDocs(collection(db,"Departements"))
+    const dataList = querySnapshot.docs.map((doc)=>(
+      doc.data().name
+    ))
+    return dataList
+  } catch (error) {
+    console.log("erreur lors de la recuperation du nom",error)
+  }
+}
 
 
 

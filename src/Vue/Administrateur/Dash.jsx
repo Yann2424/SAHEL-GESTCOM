@@ -21,6 +21,8 @@ import {
 } from "recharts";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../Modules/firebase/firebase";
+import { useNavigate } from "react-router-dom";
+
 import "../Administrateur/Dash.css";
 import Utilisateur from "../Administrateur/Utilisateur";
 import Departement from "../Administrateur/Departement";
@@ -29,6 +31,7 @@ import Depense from "../Administrateur/Depense";
 import Rapport from "../Administrateur/Rapport";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [activePage, setActivePage] = useState("Dash");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [stats, setStats] = useState({
@@ -42,36 +45,41 @@ const Dashboard = () => {
   const [budgets, setBudgets] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
 
   const COLORS = ["#0B3D91", "#e74c3c", "#27ae60", "#f39c12", "#8e44ad", "#16a085", "#c0392b"];
 
+  // Vérification de connexion
+  useEffect(() => {
+    const user = localStorage.getItem("username");
+    if (!user) {
+      navigate("/connexion");
+    } else {
+      setUsername(user);
+    }
+  }, [navigate]);
+
+  // Récupération des données depuis Firebase
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Utilisateurs
         const usersSnapshot = await getDocs(collection(db, "Utilisateurs"));
         const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Départements
         const depSnapshot = await getDocs(collection(db, "Departements"));
         const depData = depSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Budgets
         const budgetsSnapshot = await getDocs(collection(db, "Budgets"));
         const budgetData = budgetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Dépenses
         const expensesSnapshot = await getDocs(collection(db, "Depenses"));
         const expenseData = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Rapports
         const reportsSnapshot = await getDocs(collection(db, "Rapports"));
         const reports = reportsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Calcul total dépenses
         const totalExpensesAmount = expenseData.reduce((acc, e) => acc + (e.montant || 0), 0);
 
-        // Mettre à jour les stats
         setStats({
           totalUsers: users.length,
           totalDepartments: depData.length,
@@ -120,11 +128,9 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       {/* Bouton Hamburger */}
-      <button
-        className="hamburger"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      ></button>
+      <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}></button>
 
+      {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="logo-container">
           <div className="logo-placeholder">GESCOM</div>
@@ -153,13 +159,19 @@ const Dashboard = () => {
         </nav>
       </aside>
 
+      {/* Main */}
       <main className="main">
         {activePage === "Dash" && (
           <div>
-            <h2 style={{ marginBottom: "20px", color: "#0B3D91" }}>
-              Tableau de bord général
+            {/* Message de bienvenue */}
+            <h2 style={{ color: "#0B3D91", marginBottom: "10px" }}>
+              Bienvenue, <span style={{ color: "#f29544" }}>{username}</span> !
             </h2>
+            <p style={{ marginBottom: "20px", fontSize: "16px" }}>
+              Vous êtes connecté sur le tableau de bord de GESCOM. Gérez vos utilisateurs, départements, budgets, dépenses et rapports en toute simplicité.
+            </p>
 
+            {/* Stats cards */}
             <div className="stats-cards">
               <div className="stat-card user">
                 <FaUser className="stat-icon" />
@@ -188,6 +200,7 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* Graphiques */}
             <div className="charts-container">
               <div className="chart-wrapper">
                 <h3>Budgets par Département</h3>
@@ -223,12 +236,7 @@ const Dashboard = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="depense"
-                      stroke="#e74c3c"
-                      strokeWidth={2}
-                    />
+                    <Line type="monotone" dataKey="depense" stroke="#e74c3c" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

@@ -6,23 +6,29 @@ import {
 	FaFolderOpen,
 	FaReceipt,
 } from "react-icons/fa";
-import {
-	NewUser,
-	GetUser,
-	UpdateUser,
-	GetManagerFDepartement,
-} from "../../Modules/User/User_firebase";
+import { NewUser, GetUser, UpdateUser } from "../../Modules/User/User_firebase";
 
 function Utilisateur() {
 	const [search, setSearch] = useState("");
 	const [selectedUser, setSelectedUser] = useState(null);
 	const [users, setUsers] = useState([]);
-	const [departments, setDepartments] = useState([]); // Liste des départements
+	const [departments, setDepartments] = useState([]);
+	const departmentList = [
+		"Finance",
+		"Ressources Humaines",
+		"Informatique",
+		"Marketing",
+		"Ventes",
+		"Logistique",
+		"Administration",
+	];
+
 	const [newUser, setNewUser] = useState({
 		name: "",
 		email: "",
 		téléphone: "",
 		department: "",
+		role: "", // Nouveau champ role
 		expenses: [],
 	});
 	const [showForm, setShowForm] = useState(false);
@@ -51,7 +57,7 @@ function Utilisateur() {
 
 	const handleAddUser = async (e) => {
 		e.preventDefault();
-		if (newUser.name && newUser.email && newUser.department) {
+		if (newUser.name && newUser.email && newUser.department && newUser.role) {
 			await NewUser(newUser);
 			setUsers([...users, newUser]);
 			setNewUser({
@@ -59,6 +65,7 @@ function Utilisateur() {
 				email: "",
 				téléphone: "",
 				department: "",
+				role: "",
 				expenses: [],
 			});
 			setShowForm(false);
@@ -84,6 +91,7 @@ function Utilisateur() {
 							{showForm ? "Annuler" : "Ajouter un utilisateur"}
 						</button>
 					</div>
+
 					<div className="search-container">
 						<input
 							type="text"
@@ -93,6 +101,7 @@ function Utilisateur() {
 							className="search-bar"
 						/>
 					</div>
+
 					<div className="user-list">
 						{filteredUsers.map((user, index) => (
 							<div
@@ -105,6 +114,17 @@ function Utilisateur() {
 								{user.department && (
 									<span style={{ color: "#555", fontSize: "0.9rem" }}>
 										({user.department})
+									</span>
+								)}
+								{user.role && (
+									<span
+										style={{
+											color: "#0b3d91",
+											fontSize: "0.85rem",
+											marginLeft: "5px",
+										}}
+									>
+										[{user.role}]
 									</span>
 								)}
 							</div>
@@ -124,6 +144,7 @@ function Utilisateur() {
 								</h3>
 								<p>Email : {selectedUser.email}</p>
 								<p>Téléphone : {selectedUser.téléphone}</p>
+								<p>Rôle : {selectedUser.role || "Utilisateur"}</p>
 							</div>
 							<div className="card">
 								<h3>
@@ -173,7 +194,6 @@ function Utilisateur() {
 									}
 									required
 								/>
-
 								<input
 									type="email"
 									placeholder="Email"
@@ -183,7 +203,6 @@ function Utilisateur() {
 									}
 									required
 								/>
-
 								<input
 									type="text"
 									placeholder="Téléphone"
@@ -193,7 +212,7 @@ function Utilisateur() {
 									}
 								/>
 
-								{/* Select des départements */}
+								{/* Select des départements fixe */}
 								<select
 									value={newUser.department}
 									onChange={(e) =>
@@ -202,11 +221,24 @@ function Utilisateur() {
 									required
 								>
 									<option value="">Sélectionnez un département</option>
-									{departments.map((dep, i) => (
+									{departmentList.map((dep, i) => (
 										<option key={i} value={dep}>
 											{dep}
 										</option>
 									))}
+								</select>
+
+								{/* Select du rôle */}
+								<select
+									value={newUser.role}
+									onChange={(e) =>
+										setNewUser({ ...newUser, role: e.target.value })
+									}
+									required
+								>
+									<option value="">Sélectionnez un rôle</option>
+									<option value="responsable">Responsable</option>
+									<option value="utilisateur">Utilisateur</option>
 								</select>
 
 								<button type="submit" className="bt">

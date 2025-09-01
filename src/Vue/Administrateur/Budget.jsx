@@ -2,13 +2,19 @@ import React, { useState, useEffect } from "react";
 import "../Administrateur/Departement.css"; 
 import { FaEdit } from "react-icons/fa";
 import { NewBudget, GetBudget, UpdatedBudget } from "../../Modules/Budget/Budget_firebase";
-import { GetUser } from "../../Modules/User/User_firebase"; // pour récupérer les utilisateurs
+import { GetUser } from "../../Modules/User/User_firebase";
 
 function BudgetPage() {
   const [budgets, setBudgets] = useState([]);
-  const [users, setUsers] = useState([]); // liste des utilisateurs
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ departement: "", responsable: "", montant: "", date: "", description: "" });
+  const [form, setForm] = useState({
+    departement: "",
+    responsable: "",
+    montant: "",
+    date: "",
+    description: ""
+  });
   const [editIndex, setEditIndex] = useState(null);
 
   // Charger les budgets
@@ -32,7 +38,6 @@ function BudgetPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!form.departement || !form.responsable || !form.montant || !form.date) {
       alert("Veuillez remplir tous les champs");
       return;
@@ -64,6 +69,15 @@ function BudgetPage() {
     b.departement?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Filtrer les utilisateurs selon le département saisi
+  const filteredUsersByDept = users
+    .filter(u => u.department.toLowerCase() === form.departement.toLowerCase())
+    .sort((a, b) => {
+      if (a.role === "Responsable" && b.role !== "Responsable") return -1;
+      if (a.role !== "Responsable" && b.role === "Responsable") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
   return (
     <div className="dashboard">
       <main className="main">
@@ -73,7 +87,16 @@ function BudgetPage() {
           <form onSubmit={handleSubmit} className="card">
             <h3>{editIndex !== null ? "Modifier un budget" : "Ajouter un budget"}</h3><br />
 
-            {/* Select Responsable */}
+            {/* Input département */}
+            <input
+              type="text"
+              placeholder="Nom du département"
+              value={form.departement}
+              onChange={(e) => setForm({ ...form, departement: e.target.value, responsable: "" })}
+              required
+            />
+
+            {/* Select responsables/utilisateurs du département */}
             <select
               value={form.responsable}
               onChange={(e) => {
@@ -85,23 +108,24 @@ function BudgetPage() {
                     departement: selectedUser.department
                   });
                 } else {
-                  setForm({ ...form, responsable: "", departement: "" });
+                  setForm({ ...form, responsable: "" });
                 }
               }}
               required
+              disabled={!form.departement}
             >
-              <option value="">Sélectionnez un responsable</option>
-              {users.map((user, i) => (
+              <option value="">
+                {form.departement
+                  ? "Sélectionnez un responsable/utilisateur"
+                  : "Saisissez un département d'abord"}
+              </option>
+
+              {filteredUsersByDept.map((user, i) => (
                 <option key={i} value={user.name}>
-                  {user.name} ({user.department})
+                  {user.name} ({user.role || ""})
                 </option>
               ))}
             </select>
-
-            {/* Affichage automatique du département */}
-            {form.departement && (
-              <p>Département associé : <strong>{form.departement}</strong></p>
-            )}
 
             <input
               type="number"

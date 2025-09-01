@@ -2,57 +2,39 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { auth } from "../firebase/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 
 export default function Connexion() {
-  const [step, setStep] = useState('welcome')
-  const [error,setError ] = useState('')
-  const {register, handleSubmit,reset,formState:{errors}} =useForm()
+  const [step, setStep] = useState("welcome");
+  const [error, setError] = useState("");
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const navigate = useNavigate();
 
   const welcome = ()=>{
     setStep('welcome')
     reset()
     setError('')
   }
-  const soumission = async(data)=>{
-    const {email,password,nom,telephone} = data
-
-    try{
-      if(step === 'signup'){
-        const users = await createUserWithEmailAndPassword(auth,email,password)
-        console.log('utilisateur inscrit :',users.user)
-        reset()
-      } else if(step === 'login'){
-        const users = await signInWithEmailAndPassword (auth,email,password)
-        console.log ('utilisateur connecte :',users.user)
-        reset()
-        setError('')
-      } 
-    } catch(err){
-      console.error('erreuer firebase :',err.message)
-      if (step === 'signup'){
-        switch(err.code){
-        case 'auth/invalid-email':
-          setError("L'adresse email est invalide")
-        break
-        default:
-        setError("Une erreur est survenue  ")
+  const soumission = async (data) => {
+    const { email, password, nom } = data;
+    try {
+      if (step === "signup") {
+        const users = await createUserWithEmailAndPassword(auth, email, password);
+        console.log("Utilisateur inscrit :", users.user);
+        localStorage.setItem("username", nom); 
+        navigate("/dashboard");
+      } else if (step === "login") {
+        const users = await signInWithEmailAndPassword(auth, email, password);
+        console.log("Utilisateur connecté :", users.user);
+        localStorage.setItem("username", email.split("@")[0]); 
+        navigate("/dashboard"); 
       }
-      } else if ( step === 'login'){
-        switch (err.code){
-          case 'auth/wrong-password':
-          setError("Mot de passe incorrect")
-        break
-        case 'auth/user-not-found':
-          setError("Utilisateur introuvable")
-        break
-        case 'auth/email-already-in-use':
-          setError("Cet email est déjà utilisé")
-        break
-        default:
-          setError('')
-        }
-      }
+      reset();
+      setError("");
+    } catch (err) {
+      console.error("Erreur Firebase :", err.message);
+      setError("Erreur : " + err.message);
     }
   }
 

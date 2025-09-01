@@ -49,16 +49,14 @@ function DepartmentsPage() {
 
 	const showMessage = (text) => {
 		setMessage(text);
-		setTimeout(() => setMessage(""), 3000); // 3 secondes
+		setTimeout(() => setMessage(""), 3000);
 	};
 
-	
 	const toggleActive = (index) => {
 		const updated = [...departments];
 		updated[index].active = !updated[index].active;
 		setDepartments(updated);
 
-		// Affichage du message selon l'état
 		if (updated[index].active) {
 			showMessage(`Le responsable ${updated[index].manager} est maintenant actif ✅`);
 		} else {
@@ -91,7 +89,7 @@ function DepartmentsPage() {
 			}
 
 			setForm({ name: "", manager: "" });
-			setSubmitting(false); // ✅ cacher le loader
+			setSubmitting(false);
 		}
 	};
 
@@ -108,17 +106,20 @@ function DepartmentsPage() {
 		setEditIndex(index);
 	};
 
-	// const toggleActive = (index) => {
-	// 	const updated = [...departments];
-	// 	updated[index].active = !updated[index].active;
-	// 	setDepartments(updated);
-	// };
-
 	const filteredDepartments = Array.isArray(departments)
 		? departments.filter((d) =>
 				d.name.toLowerCase().includes(search.toLowerCase())
 		  )
 		: [];
+
+	// Filtrer les utilisateurs du département saisi
+	const filteredUsersByDept = users
+		.filter((u) => u.department.toLowerCase() === form.name.toLowerCase())
+		.sort((a, b) => {
+			if (a.role === "Responsable" && b.role !== "Responsable") return -1;
+			if (a.role !== "Responsable" && b.role === "Responsable") return 1;
+			return a.name.localeCompare(b.name);
+		});
 
 	if (loading) {
 		return <div>Chargement...</div>;
@@ -135,50 +136,48 @@ function DepartmentsPage() {
 					<form onSubmit={handleSubmit} className="card">
 						<h3>Ajouter un département</h3>
 						<br />
+
+						{/* Input pour saisir le nom du département */}
 						<input
 							type="text"
 							placeholder="Nom du département"
-							value={form.department || form.name} 
-							onChange={(e) => setForm({ ...form, name: e.target.value })}
+							value={form.name}
+							onChange={(e) => setForm({ ...form, name: e.target.value, manager: "" })}
+							required
 						/>
 
+						{/* Select qui affiche les responsables/utilisateurs du département saisi */}
 						<select
 							value={form.manager}
 							onChange={(e) => {
-								const selectedUser = users.find(
-									(u) => u.name === e.target.value
-								);
+								const selectedUser = users.find((u) => u.name === e.target.value);
 								if (selectedUser) {
 									setForm({
 										...form,
 										manager: selectedUser.name,
-										department: selectedUser.department, 
-										name: selectedUser.department,
+										department: selectedUser.department,
 									});
 								} else {
-									setForm({ ...form, manager: "", department: "", name: "" });
+									setForm({ ...form, manager: "", department: "" });
 								}
 							}}
 							required
+							disabled={!form.name}
 						>
-							<option value="">Sélectionnez un responsable</option>
-							{users.map((user, i) => (
+							<option value="">
+								{form.name
+									? "Sélectionnez un responsable/utilisateur"
+									: "Saisissez un département d'abord"}
+							</option>
+
+							{filteredUsersByDept.map((user, i) => (
 								<option key={i} value={user.name}>
-									{user.name} ({user.department})
+									{user.name} ({user.role || "Utilisateur"})
 								</option>
 							))}
 						</select>
 
-						{/* Affichage automatique du département
-						{form.department && (
-							<p>
-								Département de l'utilisateur sélectionné :{" "}
-								<strong>{form.department}</strong>
-							</p>
-						)} */}
-
-						<br />
-						<br />
+						<br /><br />
 
 						<button type="submit" className="btn" disabled={submitting}>
 							{submitting
@@ -211,7 +210,6 @@ function DepartmentsPage() {
 						</thead>
 						<tbody>
 							{filteredDepartments.map((d, i) => (
-							
 								<tr key={i}>
 									<td>{d.name}</td>
 									<td>{d.manager}</td>

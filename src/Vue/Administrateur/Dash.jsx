@@ -19,8 +19,9 @@ import {
 	YAxis,
 	Legend,
 } from "recharts";
+import { useState } from "react";
 
-import "../Administrateur/Utilisateur.css";
+import "../Administrateur/Dash.css";
 import Utilisateur from "../Administrateur/Utilisateur";
 import Departement from "../Administrateur/Departement";
 import Budget from "../Administrateur/Budget";
@@ -30,6 +31,7 @@ import { AppContext } from "../Administrateur/AppContext";
 
 const Dashboard = () => {
 	const [activePage, setActivePage] = React.useState("Dash");
+	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const { users, departments, budgets, reports, expenses } =
 		useContext(AppContext);
 
@@ -60,6 +62,11 @@ const Dashboard = () => {
 
 	return (
 		<div className="dashboard">
+			{/* Bouton Hamburger */}
+			<button
+				className="hamburger"
+				onClick={() => setSidebarOpen(!sidebarOpen)}
+			></button>
 			<aside className="sidebar">
 				<div className="logo-container">
 					<div className="logo-placeholder">GESCOM</div>

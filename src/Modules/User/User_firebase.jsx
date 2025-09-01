@@ -1,14 +1,14 @@
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, where } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, where, query } from 'firebase/firestore'
 import { auth, db } from '../firebase/firebase'
 import { updateEmail, createUserWithEmailAndPassword} from 'firebase/auth'
 
 const generatePassword = (length = 7) => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+"
-  let password = ""
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+  let password = "";
   for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length))
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return password
+  return password;
 }
 
 export const NewUser = async (datas) => {
@@ -111,7 +111,7 @@ export const GetManagerFDepartement = async (datas) => {
       where("name", "==", datas.name)
     );
 
-    const querySnapshot = await getDocs(q)
+    const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
       console.log("Ce département n'existe pas");
@@ -127,15 +127,3 @@ export const GetManagerFDepartement = async (datas) => {
     return null;
   }
 };
-
-export const  GetNomUser = async ()=>{
-  try {
-    const querySnapshot = await getDocs(collection(db,"Utilisateurs"))
-    const dataList = querySnapshot.docs.map((doc)=>(
-      doc.data().name
-    ))
-    return dataList
-  } catch (error) {
-    console.log("erreur lors de la recuperation du nom",error)
-  }
-}

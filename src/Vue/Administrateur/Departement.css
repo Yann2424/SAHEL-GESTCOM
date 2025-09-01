@@ -19,6 +19,33 @@ body {
   flex-direction: column;
 }
 
+select {
+  width: 95%;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+textarea {
+  width: 95%;
+  min-height: 80px;
+  resize: vertical;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: "Segoe UI", sans-serif;
+  color: #333;
+  background-color: #fff;
+  transition: all 0.3s ease;
+}
+
 .logo-container {
   display: flex;
   align-items: center;
@@ -219,6 +246,27 @@ body {
   margin-right: 10px;
   cursor: pointer;
 }
+
+.notification {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	background-color: #0b3d91;
+	color: #fff;
+	padding: 10px 20px;
+	border-radius: 5px;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+	z-index: 9999;
+	animation: fadeInOut 3s forwards;
+}
+
+@keyframes fadeInOut {
+	0% { opacity: 0; transform: translateY(-10px); }
+	10% { opacity: 1; transform: translateY(0); }
+	90% { opacity: 1; transform: translateY(0); }
+	100% { opacity: 0; transform: translateY(-10px); }
+}
+
 
 .icon-delete {
   color: #f29544;

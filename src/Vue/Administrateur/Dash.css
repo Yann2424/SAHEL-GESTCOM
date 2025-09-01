@@ -240,3 +240,83 @@ button.icon-btn.danger:hover {
     gap: 20px;
   }
 }
+
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: #0b3d91;
+  color: white;
+  padding: 20px;
+  transition: transform 0.3s ease;
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar nav ul li {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar nav ul li:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar nav ul li svg {
+  margin-right: 10px;
+}
+
+/* Hamburger bouton */
+.hamburger {
+  display: none;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: #0b3d91;
+  z-index: 1000;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 20px;
+  background: #f4f6fa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    transform: translateX(-100%);
+    z-index: 999;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main {
+    margin-left: 0; /* pas de sidebar fixe */
+    padding-top: 60px;
+  }
+}

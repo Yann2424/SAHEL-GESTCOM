@@ -4,32 +4,30 @@ import {
 	FaUserCircle,
 	FaEnvelope,
 	FaFolderOpen,
-	FaWallet,
 	FaReceipt,
 } from "react-icons/fa";
-import { NewUser, GetUser, UpdateUser } from "../../Modules/User/User_firebase";
-
-const departments = [
-	"Finance",
-	"Informatique",
-	"Marketing",
-	"Ressources Humaines",
-];
+import {
+	NewUser,
+	GetUser,
+	UpdateUser,
+	GetManagerFDepartement,
+} from "../../Modules/User/User_firebase";
 
 function Utilisateur() {
 	const [search, setSearch] = useState("");
 	const [selectedUser, setSelectedUser] = useState(null);
 	const [users, setUsers] = useState([]);
+	const [departments, setDepartments] = useState([]); // Liste des départements
 	const [newUser, setNewUser] = useState({
 		name: "",
 		email: "",
 		téléphone: "",
 		department: "",
-		budget: 0,
 		expenses: [],
 	});
 	const [showForm, setShowForm] = useState(false);
 
+	// Charger tous les utilisateurs
 	useEffect(() => {
 		async function fetchUsers() {
 			const data = await GetUser();
@@ -38,8 +36,17 @@ function Utilisateur() {
 		fetchUsers();
 	}, []);
 
-	const filteredUsers = users.filter((user) =>
-		user.name.toLowerCase().includes(search.toLowerCase())
+	// Extraire tous les départements à partir des utilisateurs
+	useEffect(() => {
+		const deps = [...new Set(users.map((u) => u.department).filter(Boolean))];
+		setDepartments(deps);
+	}, [users]);
+
+	const filteredUsers = users.filter(
+		(user) =>
+			user.name.toLowerCase().includes(search.toLowerCase()) ||
+			(user.department &&
+				user.department.toLowerCase().includes(search.toLowerCase()))
 	);
 
 	const handleAddUser = async (e) => {
@@ -52,16 +59,15 @@ function Utilisateur() {
 				email: "",
 				téléphone: "",
 				department: "",
-				budget: 0,
 				expenses: [],
 			});
 			setShowForm(false);
 		}
 	};
 
-	const handleUpdateUser = async (updatedUser) => {
+	const HandleUpdateUser = async (updatedUser) => {
 		if (!selectedUser) return;
-		await UpdateUser(selectedUser, updatedUser, updatedUser.email);
+		await UpdateUser(selectedUser, updatedUser);
 		const updatedUsers = users.map((u) =>
 			u.email === selectedUser.email ? updatedUser : u
 		);
@@ -95,7 +101,12 @@ function Utilisateur() {
 								onClick={() => setSelectedUser(user)}
 							>
 								<FaUserCircle style={{ marginRight: "8px" }} />
-								{user.name}
+								{user.name}{" "}
+								{user.department && (
+									<span style={{ color: "#555", fontSize: "0.9rem" }}>
+										({user.department})
+									</span>
+								)}
 							</div>
 						))}
 					</div>
@@ -107,7 +118,6 @@ function Utilisateur() {
 							<h2>
 								<FaUserCircle /> {selectedUser.name}
 							</h2>
-
 							<div className="card">
 								<h3>
 									<FaEnvelope /> Informations personnelles
@@ -115,22 +125,12 @@ function Utilisateur() {
 								<p>Email : {selectedUser.email}</p>
 								<p>Téléphone : {selectedUser.téléphone}</p>
 							</div>
-
 							<div className="card">
 								<h3>
 									<FaFolderOpen /> Département
 								</h3>
-								<p>{selectedUser.department}</p>{" "}
-								
+								<p>{selectedUser.department}</p>
 							</div>
-
-							<div className="card">
-								<h3>
-									<FaWallet /> Budget alloué
-								</h3>
-								<p>{selectedUser.budget.toLocaleString()} F</p>
-							</div>
-
 							<div className="card">
 								<h3>
 									<FaReceipt /> Dépenses effectuées
@@ -153,6 +153,7 @@ function Utilisateur() {
 						</div>
 					)}
 				</div>
+
 				{showForm && (
 					<div className="modal">
 						<div className="modal-content">
@@ -172,6 +173,7 @@ function Utilisateur() {
 									}
 									required
 								/>
+
 								<input
 									type="email"
 									placeholder="Email"
@@ -181,6 +183,7 @@ function Utilisateur() {
 									}
 									required
 								/>
+
 								<input
 									type="text"
 									placeholder="Téléphone"
@@ -189,6 +192,8 @@ function Utilisateur() {
 										setNewUser({ ...newUser, téléphone: e.target.value })
 									}
 								/>
+
+								{/* Select des départements */}
 								<select
 									value={newUser.department}
 									onChange={(e) =>
@@ -204,14 +209,6 @@ function Utilisateur() {
 									))}
 								</select>
 
-								<input
-									type="number"
-									placeholder="Budget"
-									value={newUser.budget}
-									onChange={(e) =>
-										setNewUser({ ...newUser, budget: Number(e.target.value) })
-									}
-								/>
 								<button type="submit" className="bt">
 									Enregistrer
 								</button>

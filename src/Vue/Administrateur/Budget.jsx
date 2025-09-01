@@ -2,19 +2,32 @@ import React, { useState, useEffect } from "react";
 import "../Administrateur/Departement.css"; 
 import { FaEdit } from "react-icons/fa";
 import { NewBudget, GetBudget, UpdatedBudget } from "../../Modules/Budget/Budget_firebase";
+import { GetUser } from "../../Modules/User/User_firebase"; // pour récupérer les utilisateurs
 
 function BudgetPage() {
   const [budgets, setBudgets] = useState([]);
+  const [users, setUsers] = useState([]); // liste des utilisateurs
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ departement: "", responsable: "", montant: "", date: "" });
+  const [form, setForm] = useState({ departement: "", responsable: "", montant: "", date: "", description: "" });
   const [editIndex, setEditIndex] = useState(null);
 
+  // Charger les budgets
   useEffect(() => {
     const fetchBudgets = async () => {
       const data = await GetBudget();
       setBudgets(data);
     };
     fetchBudgets();
+  }, []);
+
+  // Charger les utilisateurs
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const data = await GetUser();
+      if (Array.isArray(data)) setUsers(data);
+      else setUsers([]);
+    };
+    fetchUsers();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -36,11 +49,10 @@ function BudgetPage() {
       setEditIndex(null);
     } else {
       await NewBudget(form);
-
       setBudgets([...budgets, form]);
     }
 
-    setForm({ departement: "", responsable: "", montant: "", date: "" });
+    setForm({ departement: "", responsable: "", montant: "", date: "", description: "" });
   };
 
   const editBudget = (index) => {
@@ -57,33 +69,62 @@ function BudgetPage() {
       <main className="main">
         <div className="budget-page">
           <h2>Gestion des budgets</h2><br />
-          
+
           <form onSubmit={handleSubmit} className="card">
             <h3>{editIndex !== null ? "Modifier un budget" : "Ajouter un budget"}</h3><br />
-            <input
-              type="text"
-              placeholder="Nom du département"
-              value={form.departement}
-              onChange={(e) => setForm({ ...form, departement: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="Nom du responsable"
+
+            {/* Select Responsable */}
+            <select
               value={form.responsable}
-              onChange={(e) => setForm({ ...form, responsable: e.target.value })}
-            />
+              onChange={(e) => {
+                const selectedUser = users.find(u => u.name === e.target.value);
+                if (selectedUser) {
+                  setForm({
+                    ...form,
+                    responsable: selectedUser.name,
+                    departement: selectedUser.department
+                  });
+                } else {
+                  setForm({ ...form, responsable: "", departement: "" });
+                }
+              }}
+              required
+            >
+              <option value="">Sélectionnez un responsable</option>
+              {users.map((user, i) => (
+                <option key={i} value={user.name}>
+                  {user.name} ({user.department})
+                </option>
+              ))}
+            </select>
+
+            {/* Affichage automatique du département */}
+            {form.departement && (
+              <p>Département associé : <strong>{form.departement}</strong></p>
+            )}
+
             <input
               type="number"
               placeholder="Montant"
               value={form.montant}
               onChange={(e) => setForm({ ...form, montant: e.target.value })}
+              required
             />
+
             <input
               type="date"
               placeholder="Date d'ajout"
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
             />
+
+            <textarea
+              placeholder="Description"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            ></textarea>
+
             <button type="submit" className="btn">
               {editIndex !== null ? "Modifier" : "Ajouter"}
             </button>
@@ -106,6 +147,7 @@ function BudgetPage() {
                 <th>Responsable</th>
                 <th>Montant</th>
                 <th>Date d'ajout</th>
+                <th>Description</th>
                 <th>Options</th>
               </tr>
             </thead>
@@ -116,6 +158,7 @@ function BudgetPage() {
                   <td>{b.responsable}</td>
                   <td>{b.montant} F</td>
                   <td>{b.date}</td>
+                  <td>{b.description}</td>
                   <td>
                     <FaEdit className="icon-edit" onClick={() => editBudget(i)} />
                   </td>

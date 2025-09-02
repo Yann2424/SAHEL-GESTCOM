@@ -178,6 +178,77 @@ button.btn-primary:hover {
   background: #ea580c;
 }
 
+.sidebar.closed {
+  transform: translateX(-100%); /* cache la sidebar */
+}
+
+.sidebar.open {
+  transform: translateX(0); /* affiche la sidebar */
+}
+
+/* Hamburger */
+.hamburger {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 28px;   
+  background: transparent; 
+  color: white;       
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  z-index: 1100;
+  transition: transform 0.2s;
+}
+
+.hamburger:hover {
+  transform: scale(1.1); 
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  width: 100%;
+  background: blue;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Animation hamburger ouvert */
+.hamburger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Main content */
+.main {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    left: -250px;
+    top: 0;
+    height: 100%;
+    z-index: 999;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+}
+
 button.btn-secondary {
   background: #0B3D91; /* bleu */
   color: #fff;
@@ -274,26 +345,6 @@ button.icon-btn.danger:hover {
 
 .sidebar nav ul li svg {
   margin-right: 10px;
-}
-
-/* Hamburger bouton */
-.hamburger {
-  display: none;
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  font-size: 24px;
-  background: none;
-  border: none;
-  color: #0b3d91;
-  z-index: 1000;
-}
-
-/* Main */
-.main {
-  flex: 1;
-  padding: 20px;
-  background: #f4f6fa;
 }
 
 /* Responsive */

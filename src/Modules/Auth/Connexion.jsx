@@ -4,6 +4,7 @@ import { auth } from "../firebase/firebase";
 import {
 	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
+
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -60,7 +61,9 @@ export default function Connexion() {
 			{step === "welcome" && (
 				<>
 					<h1 className="text-6xl font-bold mb-3 animate-fadeIn">Bienvenue</h1>
-					<h2 className="text-5xl font-semibold mb-6 animate-zoomIn">GESCOM</h2>
+					<h2 className="text-5xl font-semibold mb-6 animate-zoomIn text-orange-400">
+						GESCOM
+					</h2>
 					<p className="mb-8 text-lg max-w-xl">
 						Gérez votre argent et vos transactions simplement, grâce à une
 						solution moderne, intuitive et sécurisée pour une gestion optimale.
@@ -136,8 +139,9 @@ export default function Connexion() {
 							{...register("role", { required: "Veuillez choisir un rôle" })}
 							className="w-full p-3 border rounded-xl text-gray-900"
 						>
-							<option value="">-- Sélectionnez le rôle --</option>
+							<option value=""> Sélectionnez le rôle </option>
 							<option value="admin">Administrateur</option>
+							<option value="Responsable">Responsable</option>
 						</select>
 						{errors.role && (
 							<p className="text-red-500 text-sm">{errors.role.message}</p>

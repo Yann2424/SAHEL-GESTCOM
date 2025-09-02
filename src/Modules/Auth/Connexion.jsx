@@ -35,7 +35,7 @@ export default function Connexion() {
 				);
 				localStorage.setItem("username", nom);
 				localStorage.setItem("role", role);
-				if (role === "admin") navigate("/dashboard/admin");
+				if (role === "admin") navigate("/dashboard/administrateur");
 				else navigate("/dashboard/responsable");
 			} else if (step === "login") {
 				const userCredential = await signInWithEmailAndPassword(
@@ -138,7 +138,6 @@ export default function Connexion() {
 						>
 							<option value="">-- Sélectionnez le rôle --</option>
 							<option value="admin">Administrateur</option>
-							<option value="responsable">Responsable</option>
 						</select>
 						{errors.role && (
 							<p className="text-red-500 text-sm">{errors.role.message}</p>

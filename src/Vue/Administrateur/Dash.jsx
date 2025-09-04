@@ -24,12 +24,12 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../Modules/firebase/firebase";
 import { useNavigate } from "react-router-dom";
 
-import "../Administrateur/Dash.css";
-import Utilisateur from "../Administrateur/Utilisateur";
-import Departement from "../Administrateur/Departement";
-import Budget from "../Administrateur/Budget";
-import Depense from "../Administrateur/Depense";
-import Rapport from "../Administrateur/Rapport";
+import "./Dash.css";
+import Utilisateur from "./Utilisateur";
+import Departement from "./Departement";
+import Budget from "./Budget";
+import Depense from "./Depense";
+import Rapport from "./Rapport";
 
 const Dashboard = () => {
 	const navigate = useNavigate();

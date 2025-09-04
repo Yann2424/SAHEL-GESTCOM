@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../Administrateur/Rapport.css";
+import "./Rapport.css";
 import {
 	FaFileAlt,
 	FaUserTie,

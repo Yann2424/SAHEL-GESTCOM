@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
 
 
@@ -51,11 +51,18 @@ export const UpdateDepartement = async (datas,newDatas,newName) =>{
       return
     }
     
-    const newDocRef = doc(db,'Departements',newName)
-    await setDoc(newDocRef,newDatas)
+    if(newName!== datas.name){
+      const newDocRef = doc(db,'Departements',newName)
+      await setDoc(newDocRef,newDatas)
 
-    await deleteDoc(docRef)
-    console.log('departement modifier !');
+      await deleteDoc(docRef)
+      console.log('departement modifier !');
+    } else{
+      await updateDoc(docRef,{
+        active : !docSnapshot.data().active
+      })
+      console.log("statut du responsable modifier");
+    }
     
   } catch(err){
     console.log('erreur lors de l/update :',err)

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useContext } from "react";
 import {
 	FaSitemap,
 	FaWallet,
@@ -13,15 +13,20 @@ import {
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import "../Responsable/DashbordResponsable.css";
+import "./DashbordResponsable.css";
 import { GetDepartementFUser } from "../../Modules/UtilisateurR/Departement/DepartementRes";
 import {
 	DepenseFUser,
 	GetDepenseFUser,
 	DeleteDepenseFUser,
 } from "../../Modules/UtilisateurR/Depense/DepenseRes";
+import { GetbudgetFDepar } from "../../Modules/UtilisateurR/Budget/BudgetsRes"; 
+import { LogOut } from "../../Modules/UtilisateurR/Auth/Connexion";
+import { useNavigate } from "react-router-dom";
+import { AppContext } from "../Administrateur/AppContext";
 
-export default function DashboardResponsable({ currentUser }) {
+export default function DashboardResponsable() {
+	const { currentUser } = useContext(AppContext);
 	const [activeTab, setActiveTab] = useState("departement");
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -38,19 +43,30 @@ export default function DashboardResponsable({ currentUser }) {
 
 	const [assignedDepartment, setAssignedDepartment] = useState("");
 	const [responsableName, setResponsableName] = useState("");
+	const [assignedBudget, setAssignedBudget] = useState(0);
 
-	const ASSIGNED_BUDGET = 2_500_000;
-
-	// --- Récupérer les infos utilisateur et ses dépenses ---
+	// --- Récupérer les infos utilisateur, budget et dépenses ---
 	useEffect(() => {
-		if (!currentUser?.email) return;
+		console.log("currentUser:", currentUser);
+		if (!currentUser?.email) {
+			console.log("users existe-pas");
+			return;
+		}
 		const fetchUserData = async () => {
+			// Département
 			const departement = await GetDepartementFUser({
 				email: currentUser.email,
 			});
 			setAssignedDepartment(departement || "Non attribué");
 			setResponsableName(currentUser.displayName || "Nom non défini");
 
+			// Budget lié au département
+			if (departement) {
+				const budget = await GetbudgetFDepar({ departement });
+				setAssignedBudget(budget || 0);
+			}
+
+			// Dépenses de l’utilisateur
 			const userData = await GetDepenseFUser({ email: currentUser.email });
 			setDepenses(userData?.expenses || []);
 			setRapport(userData?.rapport || "");
@@ -62,8 +78,10 @@ export default function DashboardResponsable({ currentUser }) {
 		() => depenses.reduce((sum, d) => sum + Number(d.montant || 0), 0),
 		[depenses]
 	);
-	const resteBudget = Math.max(ASSIGNED_BUDGET - totalDepenses, 0);
-	const progressPct = Math.min((totalDepenses / ASSIGNED_BUDGET) * 100, 100);
+	const resteBudget = Math.max(assignedBudget - totalDepenses, 0);
+	const progressPct = assignedBudget
+		? Math.min((totalDepenses / assignedBudget) * 100, 100)
+		: 0;
 
 	// --- Ajouter une dépense ---
 	const handleAddDepense = async (e) => {
@@ -111,7 +129,11 @@ export default function DashboardResponsable({ currentUser }) {
 		doc.text(title, 40, 40);
 		doc.setFontSize(11);
 		doc.text(`${responsableName} | Date: ${dateStr}`, 40, 62);
-		doc.text(`Budget attribué: ${formatMoney(ASSIGNED_BUDGET)} XAF`, 40, 80);
+		doc.text(
+			`Budget attribué: ${formatMoney(assignedBudget)} XAF`,
+			40,
+			80
+		);
 		doc.text(`Total dépenses: ${formatMoney(totalDepenses)} XAF`, 40, 96);
 		doc.text(`Reste: ${formatMoney(resteBudget)} XAF`, 40, 112);
 
@@ -141,13 +163,14 @@ export default function DashboardResponsable({ currentUser }) {
 		);
 	};
 
+	// --- Envoi par mail ---
 	const openEmailClient = () => {
 		const subject = encodeURIComponent(
 			`Rapport financier – ${assignedDepartment}`
 		);
 		const body = encodeURIComponent(
 			`Bonjour,\n\nVeuillez trouver ci-joint le rapport financier.\n\nRésumé:\n- Budget: ${formatMoney(
-				ASSIGNED_BUDGET
+				assignedBudget
 			)} XAF\n- Dépenses: ${formatMoney(
 				totalDepenses
 			)} XAF\n- Reste: ${formatMoney(
@@ -234,8 +257,8 @@ export default function DashboardResponsable({ currentUser }) {
 							<Card title="Responsable">
 								<div className="text-2xl font-semibold">{responsableName}</div>
 							</Card>
-						</Cards><br />
-
+						</Cards>
+						<br />
 						<div className="panel">
 							<h3 className="panel-title">Consignes</h3>
 							<p className="panel-text">
@@ -251,7 +274,7 @@ export default function DashboardResponsable({ currentUser }) {
 						<Cards>
 							<Card title="Budget attribué">
 								<div className="text-3xl font-bold">
-									{formatMoney(ASSIGNED_BUDGET)}{" "}
+									{formatMoney(assignedBudget)}{" "}
 									<span className="text-base font-medium">XAF</span>
 								</div>
 							</Card>
@@ -267,8 +290,8 @@ export default function DashboardResponsable({ currentUser }) {
 									<span className="text-base font-medium">XAF</span>
 								</div>
 							</Card>
-						</Cards><br />
-
+						</Cards>
+						<br />
 						<div className="panel">
 							<h3 className="panel-title">Progression du budget</h3>
 							<div className="progress">
@@ -284,188 +307,149 @@ export default function DashboardResponsable({ currentUser }) {
 					</section>
 				)}
 
-				{activeTab === "depense" && (
-					<section className="fade-in">
-						{/* Formulaire et tableau */}
-						<div className="panel">
-							<h3 className="panel-title">Enregistrer une dépense</h3>
-							<form
-								className="grid md:grid-cols-12 gap-3"
-								onSubmit={handleAddDepense}
-							>
-								<div className="md:col-span-2">
-									<label className="label">Montant (XAF)</label>
-									<input
-										type="number"
-										className="input"
-										value={depenseForm.montant}
-										onChange={(e) =>
-											setDepenseForm({
-												...depenseForm,
-												montant: e.target.value,
-											})
-										}
-										placeholder="Ex: 15000"
-										required
-									/>
-								</div>
-								<div className="md:col-span-2">
-									<label className="label">Date</label>
-									<input
-										type="date"
-										className="input"
-										value={depenseForm.date}
-										onChange={(e) =>
-											setDepenseForm({ ...depenseForm, date: e.target.value })
-										}
-										required
-									/>
-								</div>
-								<div className="md:col-span-4">
-									<label className="label">Motif</label>
-									<input
-										type="text"
-										className="input"
-										value={depenseForm.motif}
-										maxLength={120}
-										onChange={(e) =>
-											setDepenseForm({ ...depenseForm, motif: e.target.value })
-										}
-										placeholder="Ex: Achat de fournitures"
-										required
-									/>
-								</div>
-								<div className="md:col-span-3">
-									<label className="label">Type de dépense</label>
-									<select
-										className="input"
-										value={depenseForm.type}
-										onChange={(e) =>
-											setDepenseForm({ ...depenseForm, type: e.target.value })
-										}
-										required
-									>
-										<option value="">Sélectionnez un type</option>
-										<option value="Fournitures">Fournitures</option>
-										<option value="Transport">Transport</option>
-										<option value="Logement">Logement</option>
-										<option value="Restaurant">Restaurant</option>
-										<option value="Technicien">Technicien</option>
-										<option value="Autre">Autre</option>
-									</select>
-								</div>
-								<div className="md:col-span-12 flex items-end">
-									<button type="submit" className="btn-primary">
-										<FaPlus className="mr-2" /> Ajouter
-									</button>
-								</div>
-							</form>
-						</div>
-
-						<div className="panel mt-4">
-							<h3 className="panel-title">Historique des dépenses</h3>
-							<div className="table-wrap">
-								<table className="table">
-									<thead>
-										<tr>
-											<th>Date</th>
-											<th>Motif</th>
-											<th>Type</th>
-											<th className="text-right">Montant (XAF)</th>
-											<th></th>
-										</tr>
-									</thead>
-									<tbody>
-										{depenses.length === 0 && (
-											<tr>
-												<td colSpan={5} className="empty">
-													Aucune dépense enregistrée.
-												</td>
-											</tr>
-										)}
-										{depenses.map((d, idx) => (
-											<tr key={idx}>
-												<td>{new Date(d.date).toLocaleDateString()}</td>
-												<td>{d.motif}</td>
-												<td>{d.type}</td>
-												<td className="text-right">{formatMoney(d.montant)}</td>
-												<td className="text-right">
-													<button
-														className="icon-btn danger"
-														title="Supprimer"
-														onClick={() => handleDelete(d)}
-													>
-														<FaTrash />
-													</button>
-												</td>
-											</tr>
-										))}
-									</tbody>
-									{depenses.length > 0 && (
-										<tfoot>
-											<tr>
-												<td colSpan={3} className="text-right font-semibold">
-													Total
-												</td>
-												<td className="text-right font-semibold">
-													{formatMoney(totalDepenses)} XAF
-												</td>
-												<td></td>
-											</tr>
-										</tfoot>
-									)}
-								</table>
-							</div>
-						</div>
-					</section>
-				)}
-
-				{activeTab === "rapport" && (
-					<section className="fade-in">
-						<div className="panel">
-							<h3 className="panel-title">Rédiger le rapport financier</h3>
-							<textarea
-								className="textarea"
-								rows={10}
-								placeholder="Saisissez ici votre rapport"
-								value={rapport}
-								onChange={(e) => setRapport(e.target.value)}
-							/>
-							<div className="grid md:grid-cols-2 gap-3 mt-3">
-								<div>
-									<label className="label">Email de l'administrateur</label>
-									<input
-										className="input"
-										type="email"
-										value={adminEmail}
-										onChange={(e) => setAdminEmail(e.target.value)}
-									/>
-									<p className="help">
-										Le bouton Envoyer ouvrira votre messagerie avec un email
-										prérempli. Joignez le PDF exporté.
-									</p>
-								</div>
-								<div className="flex items-end gap-2">
-									<button className="btn-secondary" onClick={exportPDF}>
-										<FaDownload className="mr-2" />
-										Exporter en PDF
-									</button>
-									<button className="btn-primary" onClick={openEmailClient}>
-										<FaPaperPlane className="mr-2" />
-										Envoyer
-									</button>
-								</div>
-							</div>
-						</div>
-					</section>
+				{activeTab === "depense" && 
+				( <section className="fade-in"> 
+					{/* Formulaire et tableau */} 
+					<div className="panel"> 
+						<h3 className="panel-title">Enregistrer une dépense</h3> 
+						<form className="grid md:grid-cols-12 gap-3" onSubmit={handleAddDepense} > 
+							<div className="md:col-span-2"> 
+								<label className="label">Montant (XAF)</label> 
+								<input type="number" className="input" 
+								value={depenseForm.montant} 
+								onChange={(e) => setDepenseForm({ ...depenseForm, montant: e.target.value, }) } 
+								placeholder="Ex: 15000" required /> 
+							</div> 
+							<div className="md:col-span-2"> 
+								<label className="label">Date</label> 
+								<input type="date" 
+								className="input" 
+								value={depenseForm.date} 
+								onChange={(e) => setDepenseForm({ ...depenseForm, date: e.target.value }) } 
+								required 
+								/> 
+							</div> 
+							<div className="md:col-span-4"> 
+								<label className="label">Motif</label> 
+								<input type="text" className="input" 
+								value={depenseForm.motif} maxLength={120}
+								onChange={(e) => setDepenseForm({ ...depenseForm, motif: e.target.value }) } 
+								placeholder="Ex: Achat de fournitures" required 
+								/> 
+							</div> 
+							<div className="md:col-span-3"> 
+								<label className="label">Type de dépense</label> 
+								<select className="input" 
+								value={depenseForm.type} 
+								onChange={(e) => setDepenseForm({ ...depenseForm, type: e.target.value }) } 
+								required 
+								> 
+								<option value="">Sélectionnez un type</option> 
+								<option value="Fournitures">Fournitures</option> 
+								<option value="Transport">Transport</option> 
+								<option value="Logement">Logement</option> 
+								<option value="Restaurant">Restaurant</option> 
+								<option value="Technicien">Technicien</option> 
+								<option value="Autre">Autre</option> </select> 
+							</div> 
+							<div className="md:col-span-12 flex items-end"> 
+								<button type="submit" className="btn-primary"> 
+									<FaPlus className="mr-2" /> 
+									Ajouter 
+								</button> 
+							</div> 
+						</form> 
+					</div> 
+						<div className="panel mt-4"> 
+							<h3 className="panel-title">Historique des dépenses</h3> 
+							<div className="table-wrap"> 
+								<table className="table"> 
+									<thead> 
+										<tr> 
+											<th>Date</th> 
+											<th>Motif</th> 
+											<th>Type</th> 
+											<th className="text-right">Montant (XAF)</th> 
+											<th>Option</th> 
+										</tr> 
+										</thead> 
+									<tbody> 
+										{depenses.length === 0 && ( 
+											<tr> 
+												<td colSpan={5} className="empty"> Aucune dépense enregistrée. </td> 
+											</tr> )} 
+											{depenses.map((d, idx) => ( 
+												<tr key={idx}> 
+													<td>{new Date(d.date).toLocaleDateString()}</td> 
+													<td>{d.motif}</td> <td>{d.type}</td> 
+													<td className="text-right">{formatMoney(d.montant)}</td> 
+													<td className="text-right"> 
+														<button className="icon-btn danger" 
+														title="Supprimer" 
+														onClick={() => handleDelete(d)} 
+														> 
+															<FaTrash /> 
+														</button> 
+												</td> 
+												</tr> ))} 
+									</tbody> 
+									{depenses.length > 0 && ( 
+										<tfoot> 
+											<tr> 
+												<td colSpan={3} className="text-right font-semibold"> Total </td> 
+												<td className="text-right font-semibold"> 
+													{formatMoney(totalDepenses)} XAF 
+												</td> 
+												<td>
+												</td> 
+											</tr> 
+										</tfoot> 
+									)} </table> 
+									</div> 
+									</div> 
+									</section> 
+				)} 
+				{activeTab === "rapport" && ( 
+					<section className="fade-in"> 
+					<div className="panel"> 
+						<h3 className="panel-title">Rédiger le rapport financier</h3> 
+						<textarea className="textarea" rows={10} placeholder="Saisissez ici votre rapport" 
+						value={rapport} 
+						onChange={(e) => setRapport(e.target.value)} 
+						/> 
+						<div className="grid md:grid-cols-2 gap-3 mt-3"> 
+							<div> 
+								<label className="label">Email de l'administrateur</label> 
+								<input className="input" 
+								type="email" 
+								value={adminEmail}
+								 onChange={(e) => setAdminEmail(e.target.value)} 
+								/> 
+								<p className="help"> Le bouton Envoyer ouvrira votre messagerie avec un email prérempli. Joignez le PDF exporté. </p> 
+								</div> 
+								<div className="flex items-end gap-2"> 
+									<button className="btn-secondary" 
+									onClick={exportPDF}> 
+										<FaDownload className="mr-2" /> 
+										Exporter en PDF 
+									</button> 
+									<button className="btn-primary" 
+									onClick={openEmailClient}> 
+										<FaPaperPlane className="mr-2" /> 
+										Envoyer 
+									</button> 
+								</div> 
+							</div> 
+						</div> 
+					</section> 
 				)}
 			</main>
 		</div>
 	);
 }
 
-
 function Header() {
+	const navigate = useNavigate();
 	return (
 		<div className="flex items-center justify-between mb-6">
 			<div>
@@ -474,7 +458,10 @@ function Header() {
 					Gérez votre département et vos dépenses
 				</p>
 			</div>
-			<button className="btn-logout hover:bg-red-600 transition-colors duration-300 px-4 py-2 rounded flex items-center">
+			<button
+				onClick={() => LogOut(navigate)}
+				className="btn-logout hover:bg-red-600 transition-colors duration-300 px-4 py-2 rounded flex items-center"
+			>
 				<FaSignOutAlt className="mr-2" />
 				Déconnexion
 			</button>

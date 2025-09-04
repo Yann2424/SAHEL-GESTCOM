@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../Administrateur/Departement.css"; 
+import "./Departement.css"; 
 import { FaEdit } from "react-icons/fa";
 import { NewBudget, GetBudget, UpdatedBudget } from "../../Modules/Budget/Budget_firebase";
 import { GetUser } from "../../Modules/User/User_firebase";

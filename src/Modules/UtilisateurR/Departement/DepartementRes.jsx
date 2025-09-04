@@ -17,7 +17,8 @@ export const GetDepartementFUser = async (datas) => {
     }
 
     const userDoc = querySnapshot.docs[0];
-    return userDoc.data().departement || null;
+    console.log(userDoc.data())
+    return userDoc.data().department || null;
   } catch (err) {
     console.log("Erreur lors de la récupération du département :", err);
     return [];

@@ -34,7 +34,8 @@ export const NewUser = async (datas) => {
 
     await setDoc(docRef, {
       ...datas,
-      role:datas.role || "Utilisateur",
+      password: password,
+      role:datas.role || "Responsable",
       createdAt : new Date()
     });
 

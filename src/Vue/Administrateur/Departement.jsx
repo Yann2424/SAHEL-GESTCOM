@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../Administrateur/Departement.css";
+import "./Departement.css";
 import { FaToggleOn, FaToggleOff, FaEdit, FaTrash } from "react-icons/fa";
 import {
 	NewDepartement,
@@ -52,8 +52,12 @@ function DepartmentsPage() {
 		setTimeout(() => setMessage(""), 3000);
 	};
 
-	const toggleActive = (index) => {
+	const toggleActive = async (index) => {
 		const updated = [...departments];
+		const departement = updated[index];
+		console.log("departement",departement)
+    	// Appel Firestore pour mettre à jour le statut du responsable
+    	await UpdateDepartement(departement, departement, departement.name);
 		updated[index].active = !updated[index].active;
 		setDepartments(updated);
 

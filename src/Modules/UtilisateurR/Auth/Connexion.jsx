@@ -1,4 +1,6 @@
+import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/firebase"
+
 
 export const LoadUser = async ()=>{
     const users = auth.currentUser.email
@@ -8,3 +10,12 @@ export const LoadUser = async ()=>{
     }
 }
 
+export const LogOut = async (navigate)=>{
+    try {
+        await signOut(auth)
+        navigate("/")
+        console.log("Utilisateur deconnecte");
+    } catch (error) {
+        console.log("erreru lors de la decoonexion",error);
+    }
+}

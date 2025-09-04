@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import "../Administrateur/Departement.css";
+import "./Departement.css";
 import { NewDepense, GetDepense, UpdateDepense, DeleteDepense } from "../../Modules/Depense/Depense_firebase"; 
 import { GetUser } from "../../Modules/User/User_firebase"; // pour récupérer les utilisateurs
 
@@ -66,7 +66,7 @@ function DepensePage() {
   };
 
   const filteredDepenses = depenses.filter((d) =>
-    d.departement.toLowerCase().includes(search.toLowerCase())
+    (d.departement || '').toLowerCase().includes(search.toLowerCase())
   );
 
   // Filtrer les utilisateurs selon le département saisi

@@ -7,7 +7,8 @@ import { AppProvider } from "./Vue/Administrateur/AppProvider";
 
 function App() {
   return (
-    <BrowserRouter>
+    <AppProvider>
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<Connexion />} />
         <Route path="/dashboard/administrateur" element={
@@ -19,6 +20,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
+    </AppProvider>
   );
 }
 

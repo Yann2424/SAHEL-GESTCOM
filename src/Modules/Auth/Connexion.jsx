@@ -1,23 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
-import { auth } from "../firebase/firebase";
+import { auth, db } from "../firebase/firebase";
 import {
 	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
-
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { AppContext } from "../../Vue/Administrateur/AppContext";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function Connexion() {
 	const [step, setStep] = useState("welcome");
 	const [error, setError] = useState("");
-	const {
-		register,
-		handleSubmit,
-		reset,
-		formState: { errors },
-	} = useForm();
+	const { register, handleSubmit, reset, formState: { errors } } = useForm();
 	const navigate = useNavigate();
+	const { setCurrentUser } = useContext(AppContext);
 
 	const welcome = () => {
 		setStep("welcome");
@@ -28,31 +25,63 @@ export default function Connexion() {
 	const soumission = async (data) => {
 		const { email, password, nom, role } = data;
 		try {
+			localStorage.setItem("username", nom || email.split("@")[0]);
+			localStorage.setItem("role", role);
+
 			if (step === "signup") {
-				const userCredential = await createUserWithEmailAndPassword(
-					auth,
-					email,
-					password
-				);
-				localStorage.setItem("username", nom);
-				localStorage.setItem("role", role);
+				const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+				const user = userCredential.user;
+
+				// Mettre à jour le context
+				setCurrentUser({
+					email: user.email,
+					displayName: nom || user.email.split("@")[0],
+					uid: user.uid
+				});
+
 				if (role === "admin") navigate("/dashboard/administrateur");
 				else navigate("/dashboard/responsable");
+
 			} else if (step === "login") {
-				const userCredential = await signInWithEmailAndPassword(
-					auth,
-					email,
-					password
-				);
-				localStorage.setItem("username", email.split("@")[0]);
+				const userCredential = await signInWithEmailAndPassword(auth, email, password);
+				const user = userCredential.user;
+
+
+				// Mettre à jour le context
+				setCurrentUser({
+					email: user.email,
+					displayName: localStorage.getItem("username") || user.email.split("@")[0],
+					uid: user.uid
+				});
+
 				const userRole = localStorage.getItem("role") || "admin";
-				if (userRole === "admin") navigate("/dashboard/admin");
-				else navigate("/dashboard/responsable");
+				if (userRole === "admin") navigate("/dashboard/administrateur");
+				else {
+					const managerName = user.email.split("@")[0];
+
+    			// Vérifier dans Firestore
+    			const querySnapshot = await getDocs(
+      				query(collection(db, "Departements"), where("manager", "==", managerName))
+    			);
+
+
+    			const departementData = querySnapshot.docs[0].data();
+
+    			if (departementData.active === false) {
+      				await auth.signOut();
+      				alert("Votre compte est désactivé");
+      				return;
+    			}
+				navigate("/dashboard/responsable");
+				}
 			}
+
 			reset();
 			setError("");
 		} catch (err) {
 			setError("Erreur : " + err.message);
+			console.log(err);
+			
 		}
 	};
 
@@ -76,10 +105,7 @@ export default function Connexion() {
 					</button>
 					<p className="mt-4 text-lg">
 						Vous avez déjà un compte ?{" "}
-						<span
-							className="underline cursor-pointer"
-							onClick={() => setStep("login")}
-						>
+						<span className="underline cursor-pointer" onClick={() => setStep("login")}>
 							Se connecter
 						</span>
 					</p>
@@ -102,27 +128,20 @@ export default function Connexion() {
 									placeholder="Nom d'utilisateur"
 									className="w-full p-3 border rounded-xl text-gray-900 outline-none"
 								/>
-								{errors.nom && (
-									<p className="text-red-500 text-sm">{errors.nom.message}</p>
-								)}
+								{errors.nom && <p className="text-red-500 text-sm">{errors.nom.message}</p>}
 							</>
 						)}
 
 						<input
 							{...register("email", {
 								required: "Ce champ est requis",
-								pattern: {
-									value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-									message: "Adresse email invalide",
-								},
+								pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, message: "Adresse email invalide" }
 							})}
 							type="email"
 							placeholder="Email"
 							className="w-full p-3 border rounded-xl text-gray-900 outline-none"
 						/>
-						{errors.email && (
-							<p className="text-red-500 text-sm">{errors.email.message}</p>
-						)}
+						{errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
 
 						<input
 							{...register("password", { required: "Ce champ est requis" })}
@@ -130,11 +149,10 @@ export default function Connexion() {
 							placeholder="Mot de passe"
 							className="w-full p-3 border rounded-xl text-gray-900 outline-none"
 						/>
-						{errors.password && (
-							<p className="text-red-500 text-sm">{errors.password.message}</p>
-						)}
+						{errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
 
 						{error && <p className="text-red-500 text-sm">{error}</p>}
+
 						<select
 							{...register("role", { required: "Veuillez choisir un rôle" })}
 							className="w-full p-3 border rounded-xl text-gray-900"
@@ -143,9 +161,7 @@ export default function Connexion() {
 							<option value="admin">Administrateur</option>
 							<option value="Responsable">Responsable</option>
 						</select>
-						{errors.role && (
-							<p className="text-red-500 text-sm">{errors.role.message}</p>
-						)}
+						{errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
 
 						<button
 							type="submit"
@@ -159,20 +175,14 @@ export default function Connexion() {
 						{step === "signup" ? (
 							<>
 								Vous avez déjà un compte ?{" "}
-								<span
-									className="text-[#0b3d91] font-semibold cursor-pointer"
-									onClick={() => setStep("login")}
-								>
+								<span className="text-[#0b3d91] font-semibold cursor-pointer" onClick={() => setStep("login")}>
 									Se connecter
 								</span>
 							</>
 						) : (
 							<>
 								Vous n'avez pas de compte ?{" "}
-								<span
-									className="text-[#0b3d91] font-semibold cursor-pointer"
-									onClick={() => setStep("signup")}
-								>
+								<span className="text-[#0b3d91] font-semibold cursor-pointer" onClick={() => setStep("signup")}>
 									S'inscrire
 								</span>
 							</>
@@ -180,10 +190,7 @@ export default function Connexion() {
 					</p>
 
 					<p className="mt-2 text-sm">
-						<span
-							className="text-[#0b3d91] font-semibold cursor-pointer"
-							onClick={welcome}
-						>
+						<span className="text-[#0b3d91] font-semibold cursor-pointer" onClick={welcome}>
 							← Retour à l'accueil
 						</span>
 					</p>

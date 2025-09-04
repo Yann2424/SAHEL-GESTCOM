@@ -1,9 +1,7 @@
 
-import { collection, collectionGroup, doc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { collection, addDoc, collectionGroup, doc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
-import { collection, query, where, getDocs, doc, addDoc } from "firebase/firestore";
-import { db } from "../firebase/firebase"; // adapte le chemin selon ton projet
 
 export const NewRapportFUser = async (datas) => {
   try {
@@ -44,9 +42,6 @@ export const NewRapportFUser = async (datas) => {
 };
 
 
-import { collection, query, where, getDocs, doc } from "firebase/firestore";
-import { db } from "../firebase/firebase";
-
 export const GetRapports = async () => {
   try {
     const querySnapshot = await getDocs(collectionGroup(db,"Rapports"))
@@ -61,7 +56,7 @@ export const GetRapports = async () => {
   }
 };
 
-const ValideRapport = async(datas,id)=>{
+export const ValideRapport = async(datas,id)=>{
   try{
     const rapportRef = doc(db,"Utilisateurs",datas.email,"Rapports",id)
     await updateDoc(rapportRef,{
@@ -73,7 +68,7 @@ const ValideRapport = async(datas,id)=>{
     console.log("erreur lors de la validation du rapport ",err)
   }
 }
-const refuserRapport = async(datas,id)=>{
+export const refuserRapport = async(datas,id)=>{
   try{
     const rapportRef = doc(db,"Utilisateurs",datas.email,"Rapports",id)
     await updateDoc(rapportRef,{
@@ -86,7 +81,7 @@ const refuserRapport = async(datas,id)=>{
   }
 }
 
-const GetRapportFUser = async(datas)=>{
+export const GetRapportFUser = async(datas)=>{
   try {
     const q = query(
       collection(db,"Utilisateurs"),

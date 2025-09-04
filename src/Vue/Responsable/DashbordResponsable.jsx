@@ -20,10 +20,17 @@ import {
 	GetDepenseFUser,
 	DeleteDepenseFUser,
 } from "../../Modules/UtilisateurR/Depense/DepenseRes";
-import { GetbudgetFDepar } from "../../Modules/UtilisateurR/Budget/BudgetsRes"; 
+import { GetbudgetFDepar } from "../../Modules/UtilisateurR/Budget/BudgetsRes";
 import { LogOut } from "../../Modules/UtilisateurR/Auth/Connexion";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../Administrateur/AppContext";
+import {
+	NewRapportFUser,
+	GetRapports,
+	ValideRapport,
+	// refuserRapport,
+	GetRapportFUser,
+} from "../../Modules/UtilisateurR/Rapport/RapportR"; // adapte le chemin selon ton projet
 
 export default function DashboardResponsable() {
 	const { currentUser } = useContext(AppContext);
@@ -38,8 +45,8 @@ export default function DashboardResponsable() {
 	});
 
 	const [depenses, setDepenses] = useState([]);
-	const [rapport, setRapport] = useState("");
-	const [adminEmail, setAdminEmail] = useState("admin@entreprise.com");
+	// const [rapport, setRapport] = useState("");
+	const [adminEmail] = useState("admin@entreprise.com");
 
 	const [assignedDepartment, setAssignedDepartment] = useState("");
 	const [responsableName, setResponsableName] = useState("");
@@ -129,11 +136,7 @@ export default function DashboardResponsable() {
 		doc.text(title, 40, 40);
 		doc.setFontSize(11);
 		doc.text(`${responsableName} | Date: ${dateStr}`, 40, 62);
-		doc.text(
-			`Budget attribué: ${formatMoney(assignedBudget)} XAF`,
-			40,
-			80
-		);
+		doc.text(`Budget attribué: ${formatMoney(assignedBudget)} XAF`, 40, 80);
 		doc.text(`Total dépenses: ${formatMoney(totalDepenses)} XAF`, 40, 96);
 		doc.text(`Reste: ${formatMoney(resteBudget)} XAF`, 40, 112);
 
@@ -180,6 +183,35 @@ export default function DashboardResponsable() {
 		window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
 	};
 
+	const [rapport, setRapport] = useState("");
+	const [rapports, setRapports] = useState([]);
+	// --- Récupérer les rapports de l'utilisateur connecté ---
+	useEffect(() => {
+		if (!currentUser?.email) return;
+
+		const fetchRapports = async () => {
+			const data = await GetRapportFUser({ email: currentUser.email });
+			setRapports(data || []);
+		};
+
+		fetchRapports();
+	}, [currentUser]);
+
+	const handleSendRapport = async () => {
+		if (!rapport.trim())
+			return alert("Veuillez rédiger un rapport avant d’envoyer.");
+
+		try {
+			await NewRapportFUser({ email: currentUser.email, rapport });
+			setRapport(""); // vider le champ
+			const data = await GetRapportFUser({ email: currentUser.email });
+			setRapports(data || []);
+			alert("Rapport soumis avec succès !");
+		} catch (err) {
+			console.log("Erreur lors de l'envoi du rapport :", err);
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-100 flex">
 			{/* Sidebar */}
@@ -207,9 +239,9 @@ export default function DashboardResponsable() {
 					</button>
 				</div>
 				<nav className="p-3 space-y-2">
-					<NavItem
-						icon={<FaSitemap />}
-						label="Département"
+					<NavItem 
+						icon={<FaTachometerAlt />}
+						label="Dashboard"
 						active={activeTab === "departement"}
 						onClick={() => setActiveTab("departement")}
 						expanded={sidebarOpen}
@@ -307,141 +339,215 @@ export default function DashboardResponsable() {
 					</section>
 				)}
 
-				{activeTab === "depense" && 
-				( <section className="fade-in"> 
-					{/* Formulaire et tableau */} 
-					<div className="panel"> 
-						<h3 className="panel-title">Enregistrer une dépense</h3> 
-						<form className="grid md:grid-cols-12 gap-3" onSubmit={handleAddDepense} > 
-							<div className="md:col-span-2"> 
-								<label className="label">Montant (XAF)</label> 
-								<input type="number" className="input" 
-								value={depenseForm.montant} 
-								onChange={(e) => setDepenseForm({ ...depenseForm, montant: e.target.value, }) } 
-								placeholder="Ex: 15000" required /> 
-							</div> 
-							<div className="md:col-span-2"> 
-								<label className="label">Date</label> 
-								<input type="date" 
-								className="input" 
-								value={depenseForm.date} 
-								onChange={(e) => setDepenseForm({ ...depenseForm, date: e.target.value }) } 
-								required 
-								/> 
-							</div> 
-							<div className="md:col-span-4"> 
-								<label className="label">Motif</label> 
-								<input type="text" className="input" 
-								value={depenseForm.motif} maxLength={120}
-								onChange={(e) => setDepenseForm({ ...depenseForm, motif: e.target.value }) } 
-								placeholder="Ex: Achat de fournitures" required 
-								/> 
-							</div> 
-							<div className="md:col-span-3"> 
-								<label className="label">Type de dépense</label> 
-								<select className="input" 
-								value={depenseForm.type} 
-								onChange={(e) => setDepenseForm({ ...depenseForm, type: e.target.value }) } 
-								required 
-								> 
-								<option value="">Sélectionnez un type</option> 
-								<option value="Fournitures">Fournitures</option> 
-								<option value="Transport">Transport</option> 
-								<option value="Logement">Logement</option> 
-								<option value="Restaurant">Restaurant</option> 
-								<option value="Technicien">Technicien</option> 
-								<option value="Autre">Autre</option> </select> 
-							</div> 
-							<div className="md:col-span-12 flex items-end"> 
-								<button type="submit" className="btn-primary"> 
-									<FaPlus className="mr-2" /> 
-									Ajouter 
-								</button> 
-							</div> 
-						</form> 
-					</div> 
-						<div className="panel mt-4"> 
-							<h3 className="panel-title">Historique des dépenses</h3> 
-							<div className="table-wrap"> 
-								<table className="table"> 
-									<thead> 
-										<tr> 
-											<th>Date</th> 
-											<th>Motif</th> 
-											<th>Type</th> 
-											<th className="text-right">Montant (XAF)</th> 
-											<th>Option</th> 
-										</tr> 
-										</thead> 
-									<tbody> 
-										{depenses.length === 0 && ( 
-											<tr> 
-												<td colSpan={5} className="empty"> Aucune dépense enregistrée. </td> 
-											</tr> )} 
-											{depenses.map((d, idx) => ( 
-												<tr key={idx}> 
-													<td>{new Date(d.date).toLocaleDateString()}</td> 
-													<td>{d.motif}</td> <td>{d.type}</td> 
-													<td className="text-right">{formatMoney(d.montant)}</td> 
-													<td className="text-right"> 
-														<button className="icon-btn danger" 
-														title="Supprimer" 
-														onClick={() => handleDelete(d)} 
-														> 
-															<FaTrash /> 
-														</button> 
-												</td> 
-												</tr> ))} 
-									</tbody> 
-									{depenses.length > 0 && ( 
-										<tfoot> 
-											<tr> 
-												<td colSpan={3} className="text-right font-semibold"> Total </td> 
-												<td className="text-right font-semibold"> 
-													{formatMoney(totalDepenses)} XAF 
-												</td> 
+				{activeTab === "depense" && (
+					<section className="fade-in">
+						{/* Formulaire et tableau */}
+						<div className="panel">
+							<h3 className="panel-title">Enregistrer une dépense</h3>
+							<form
+								className="grid md:grid-cols-12 gap-3"
+								onSubmit={handleAddDepense}
+							>
+								<div className="md:col-span-2">
+									<label className="label">Montant (XAF)</label>
+									<input
+										type="number"
+										className="input"
+										value={depenseForm.montant}
+										onChange={(e) =>
+											setDepenseForm({
+												...depenseForm,
+												montant: e.target.value,
+											})
+										}
+										placeholder="Ex: 15000"
+										required
+									/>
+								</div>
+								<div className="md:col-span-2">
+									<label className="label">Date</label>
+									<input
+										type="date"
+										className="input"
+										value={depenseForm.date}
+										onChange={(e) =>
+											setDepenseForm({ ...depenseForm, date: e.target.value })
+										}
+										required
+									/>
+								</div>
+								<div className="md:col-span-4">
+									<label className="label">Motif</label>
+									<input
+										type="text"
+										className="input"
+										value={depenseForm.motif}
+										maxLength={120}
+										onChange={(e) =>
+											setDepenseForm({ ...depenseForm, motif: e.target.value })
+										}
+										placeholder="Ex: Achat de fournitures"
+										required
+									/>
+								</div>
+								<div className="md:col-span-3">
+									<label className="label">Type de dépense</label>
+									<select
+										className="input"
+										value={depenseForm.type}
+										onChange={(e) =>
+											setDepenseForm({ ...depenseForm, type: e.target.value })
+										}
+										required
+									>
+										<option value="">Sélectionnez un type</option>
+										<option value="Fournitures">Fournitures</option>
+										<option value="Transport">Transport</option>
+										<option value="Logement">Logement</option>
+										<option value="Restaurant">Restaurant</option>
+										<option value="Technicien">Technicien</option>
+										<option value="Autre">Autre</option>{" "}
+									</select>
+								</div>
+								<div className="md:col-span-12 flex items-end">
+									<button type="submit" className="btn-primary">
+										<FaPlus className="mr-2" />
+										Ajouter
+									</button>
+								</div>
+							</form>
+						</div>
+						<div className="panel mt-4">
+							<h3 className="panel-title">Historique des dépenses</h3>
+							<div className="table-wrap">
+								<table className="table">
+									<thead>
+										<tr>
+											<th>Date</th>
+											<th>Motif</th>
+											<th>Type</th>
+											<th className="text-right">Montant (XAF)</th>
+											<th>Option</th>
+										</tr>
+									</thead>
+									<tbody>
+										{depenses.length === 0 && (
+											<tr>
+												<td colSpan={5} className="empty">
+													{" "}
+													Aucune dépense enregistrée.{" "}
+												</td>
+											</tr>
+										)}
+										{depenses.map((d, idx) => (
+											<tr key={idx}>
+												<td>{new Date(d.date).toLocaleDateString()}</td>
+												<td>{d.motif}</td> <td>{d.type}</td>
+												<td className="text-right">{formatMoney(d.montant)}</td>
+												<td className="text-right">
+													<button
+														className="icon-btn danger"
+														title="Supprimer"
+														onClick={() => handleDelete(d)}
+													>
+														<FaTrash />
+													</button>
+												</td>
+											</tr>
+										))}
+									</tbody>
+									{depenses.length > 0 && (
+										<tfoot>
+											<tr>
+												<td colSpan={3} className="text-right font-semibold">
+													{" "}
+													Total{" "}
+												</td>
+												<td className="text-right font-semibold">
+													{formatMoney(totalDepenses)} XAF
+												</td>
+												<td></td>
+											</tr>
+										</tfoot>
+									)}{" "}
+								</table>
+							</div>
+						</div>
+					</section>
+				)}
+				{activeTab === "rapport" && (
+					<section className="fade-in">
+						<div className="panel">
+							<h3 className="panel-title">Rédiger le rapport financier</h3>
+							<textarea
+								className="textarea"
+								rows={6}
+								placeholder="Saisissez ici votre rapport"
+								value={rapport}
+								onChange={(e) => setRapport(e.target.value)}
+							/>
+
+							<div className="flex gap-3 mt-3">
+								<button className="btn-primary" onClick={handleSendRapport}>
+									<FaPaperPlane className="mr-2" />
+									Soumettre
+								</button>
+								<button className="btn-secondary" onClick={exportPDF}>
+									<FaDownload className="mr-2" />
+									Exporter PDF
+								</button>
+								{/* <button className="btn-secondary" onClick={openEmailClient}>
+									<FaPaperPlane className="mr-2" />
+									Envoyer par email
+								</button> */}
+							</div>
+						</div>
+
+						<div className="panel mt-4">
+							<h3 className="panel-title">Mes rapports soumis</h3>
+							<div className="table-wrap">
+								<table className="table">
+									<thead>
+										<tr>
+											<th>Date</th>
+											<th>Rapports</th>
+											<th>Statuts</th>
+										</tr>
+									</thead>
+									<tbody>
+										{rapports.length === 0 && (
+											<tr>
+												<td colSpan={3} className="empty">
+													Aucun rapport soumis.
+												</td>
+											</tr>
+										)}
+										{rapports.map((r) => (
+											<tr key={r.id}>
 												<td>
-												</td> 
-											</tr> 
-										</tfoot> 
-									)} </table> 
-									</div> 
-									</div> 
-									</section> 
-				)} 
-				{activeTab === "rapport" && ( 
-					<section className="fade-in"> 
-					<div className="panel"> 
-						<h3 className="panel-title">Rédiger le rapport financier</h3> 
-						<textarea className="textarea" rows={10} placeholder="Saisissez ici votre rapport" 
-						value={rapport} 
-						onChange={(e) => setRapport(e.target.value)} 
-						/> 
-						<div className="grid md:grid-cols-2 gap-3 mt-3"> 
-							<div> 
-								<label className="label">Email de l'administrateur</label> 
-								<input className="input" 
-								type="email" 
-								value={adminEmail}
-								 onChange={(e) => setAdminEmail(e.target.value)} 
-								/> 
-								<p className="help"> Le bouton Envoyer ouvrira votre messagerie avec un email prérempli. Joignez le PDF exporté. </p> 
-								</div> 
-								<div className="flex items-end gap-2"> 
-									<button className="btn-secondary" 
-									onClick={exportPDF}> 
-										<FaDownload className="mr-2" /> 
-										Exporter en PDF 
-									</button> 
-									<button className="btn-primary" 
-									onClick={openEmailClient}> 
-										<FaPaperPlane className="mr-2" /> 
-										Envoyer 
-									</button> 
-								</div> 
-							</div> 
-						</div> 
-					</section> 
+													{r.createdAt?.toDate().toLocaleDateString() || "—"}
+												</td>
+												<td>{r.rapport}</td>
+												<td>
+													<span
+														className={`px-2 py-1 rounded text-white text-sm ${
+															r.statut === "Valide"
+																? "bg-green-500"
+																: r.statut === "Refuse"
+																? "bg-red-500"
+																: "bg-yellow-500"
+														}`}
+													>
+														{r.statut}
+													</span>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</section>
 				)}
 			</main>
 		</div>

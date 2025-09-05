@@ -118,7 +118,7 @@ function DepartmentsPage() {
 
 	// Filtrer les utilisateurs du département saisi
 	const filteredUsersByDept = users
-		.filter((u) => u.department.toLowerCase() === form.name.toLowerCase())
+		.filter((u) => (u.department || "").toLowerCase() === form.name.toLowerCase())
 		.sort((a, b) => {
 			if (a.role === "Responsable" && b.role !== "Responsable") return -1;
 			if (a.role !== "Responsable" && b.role === "Responsable") return 1;

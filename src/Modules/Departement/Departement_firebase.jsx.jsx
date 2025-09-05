@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore'
 import { db } from '../firebase/firebase'
 
 
@@ -78,6 +78,17 @@ export const DeleteDepartement = async (datas)=>{
       console.log('departement n"existe pas');
       return
     }
+
+    const depensesRef = collection(db, 'Depenses');
+    const q = query(depensesRef, where('departement', '==', datas.name));
+    const depensesSnapshot = await getDocs(q);
+    console.log("Dépenses trouvées :", depensesSnapshot.docs.length);
+    for (const depDoc of depensesSnapshot.docs) {
+      await deleteDoc(doc(db, 'Depenses', depDoc.id));
+      console.log(`Dépense ${depDoc.id} supprimée`);
+    }
+    
+
     await deleteDoc(docRef)
     console.log('departement supprime !')
   } catch(err){

@@ -71,7 +71,7 @@ function BudgetPage() {
 
   // Filtrer les utilisateurs selon le département saisi
   const filteredUsersByDept = users
-    .filter(u => u.department.toLowerCase() === form.departement.toLowerCase())
+    .filter(u => (u.department || '').toLowerCase() === form.departement.toLowerCase())
     .sort((a, b) => {
       if (a.role === "Responsable" && b.role !== "Responsable") return -1;
       if (a.role !== "Responsable" && b.role === "Responsable") return 1;

@@ -10,6 +10,7 @@ import {
 	FaPaperPlane,
 	FaSignOutAlt,
 	FaBars,
+	FaTachometerAlt,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";

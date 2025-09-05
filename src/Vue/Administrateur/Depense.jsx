@@ -71,7 +71,7 @@ function DepensePage() {
 
   // Filtrer les utilisateurs selon le département saisi
   const filteredUsersByDept = users.filter(
-    (u) => u.department.toLowerCase() === form.departement.toLowerCase()
+    (u) => (u.department || "").toLowerCase() === form.departement.toLowerCase()
   );
 
   return (

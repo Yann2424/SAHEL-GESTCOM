@@ -20,10 +20,11 @@ export const NewRapportFUser = async (datas) => {
     
     const userDoc = querySnapshot.docs[0];
     const userRef = doc(db, "Utilisateurs", userDoc.id);
-
+    const userName = userDoc.data().name
     
     await addDoc(collection(userRef, "Rapports"), {
       rapport: datas.rapport,
+      name: userName,
       statut: "en attente",
       email: datas.email,
       createdAt: new Date(), 

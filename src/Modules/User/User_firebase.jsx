@@ -1,6 +1,6 @@
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, where, query } from 'firebase/firestore'
 import { auth, db } from '../firebase/firebase'
-import { updateEmail, createUserWithEmailAndPassword} from 'firebase/auth'
+import { updateEmail, createUserWithEmailAndPassword, sendPasswordResetEmail} from 'firebase/auth'
 
 const generatePassword = (length = 7) => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
@@ -11,37 +11,79 @@ const generatePassword = (length = 7) => {
   return password;
 }
 
+// export const NewUser = async (datas) => {
+//   try {
+//     const password = generatePassword()
+//     const userCredential = await createUserWithEmailAndPassword(
+//       auth,
+//       datas.email,
+//       password
+//     );
+
+//     const user = userCredential.user;
+//     console.log("Utilisateur créé dans Auth:", user.uid);
+
+    
+//     const docRef = doc(db, "Utilisateurs", datas.email);
+//     const docSnapshot = await getDoc(docRef);
+
+//     if (docSnapshot.exists()) {
+//       console.log("Utilisateur existe déjà dans Firestore !");
+//       return;
+//     }
+
+//     await setDoc(docRef, {
+//       ...datas,
+//       password: password,
+//       role:datas.role || "Responsable",
+//       createdAt : new Date()
+//     });
+
+//     console.log("Utilisateur ajouté dans Firestore !");
+//   } catch (err) {
+//     console.log("Erreur lors de la création de l'utilisateur:", err);
+//   }
+// };
+
+
+
 export const NewUser = async (datas) => {
   try {
-    const password = generatePassword()
+    // Mot de passe temporaire généré (inutile pour l'utilisateur)
+    const tempPassword = Math.random().toString(36).slice(-8);
+
+    // 🔹 Création de l'utilisateur dans Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       datas.email,
-      password
+      tempPassword
     );
-
     const user = userCredential.user;
-    console.log("Utilisateur créé dans Auth:", user.uid);
+    console.log("Utilisateur créé dans Auth :", user.uid);
 
-    
+    // 🔹 Vérifie si l'utilisateur existe déjà dans Firestore
     const docRef = doc(db, "Utilisateurs", datas.email);
     const docSnapshot = await getDoc(docRef);
-
     if (docSnapshot.exists()) {
       console.log("Utilisateur existe déjà dans Firestore !");
       return;
     }
 
+    // 🔹 Ajouter l'utilisateur dans Firestore sans mot de passe
     await setDoc(docRef, {
       ...datas,
-      password: password,
-      role:datas.role || "Responsable",
-      createdAt : new Date()
+      role: datas.role || "Responsable",
+      createdAt: new Date(),
+      password: null, // on ne stocke pas le mot de passe
     });
-
     console.log("Utilisateur ajouté dans Firestore !");
+
+    // 🔹 Envoyer email pour que l'utilisateur crée son mot de passe
+    await sendPasswordResetEmail(auth, datas.email);
+    console.log(`Email envoyé à ${datas.email} pour créer son mot de passe`);
+
   } catch (err) {
-    console.log("Erreur lors de la création de l'utilisateur:", err);
+    console.log("Erreur lors de la création de l'utilisateur :", err);
   }
 };
 

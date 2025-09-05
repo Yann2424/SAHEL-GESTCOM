@@ -48,19 +48,9 @@ const Dashboard = () => {
 	const [loading, setLoading] = useState(true);
 	const [username, setUsername] = useState("");
 
-	const budgetParDepartement = [
-		{ name: "Informatique", budget: 40000 },
-		{ name: "Marketing", budget: 25000 },
-		{ name: "RH", budget: 15000 },
-		{ name: "Finance", budget: 30000 },
-	];
+	
 
-	const depenseParBudget = [
-		{ name: "Budget A", depense: 12000 },
-		{ name: "Budget B", depense: 18000 },
-		{ name: "Budget C", depense: 10000 },
-		{ name: "Budget D", depense: 22000 },
-	];
+	
 	const COLORS = [
 		"#0B3D91",
 		"#e74c3c",
@@ -160,20 +150,21 @@ const Dashboard = () => {
 		);
 	}
 
-	// const budgetParDepartement = departments.map((dep) => {
-	// 	const totalBudget = budgets
-	// 		.filter((b) => b.departementId === dep.id)
-	// 		.reduce((sum, b) => sum + (b.montant || 0), 0);
-	// 	return { name: dep.nom || dep.name, budget: totalBudget };
-	// });
+	 const budgetParDepartement = departments.map((dep) => {
+	 	const totalBudget = budgets
+	 		.filter((b) => b.departement === (dep.nom || dep.name))
+	 		.reduce((sum, b) => sum + (Number(b.montant || 0)), 0);
+	 	return { name: dep.nom || dep.name, budget: totalBudget };
+	 });
 
-	// const depenseParBudget = budgets.map((b) => {
-	// 	const totalDepense = expenses
-	// 		.filter((e) => e.budgetId === b.id)
-	// 		.reduce((sum, e) => sum + (e.montant || 0), 0);
-	// 	return { name: b.nom || b.name, depense: totalDepense };
-	// });
-
+	
+	 const depenseParBudget = budgets.map((b) => {
+	 	const totalDepense = expenses
+	 		.filter((e) => e.budgetId === b.id)
+			.reduce((sum, e) => sum + (e.montant || 0), 0);
+	 	return { name: b.departement || b.name, depense: totalDepense };
+	 });
+	 console.log(depenseParBudget,"depenseParBudget",budgets);
 	return (
 		<div className="dashboard">
 			{/* Sidebar */}
@@ -278,12 +269,12 @@ const Dashboard = () => {
 											outerRadius={100}
 											label
 										>
-											{budgetParDepartement.map((_, index) => (
-												<Cell
-													key={`cell-${index}`}
-													fill={COLORS[index % COLORS.length]}
-												/>
-											))}
+										{budgetParDepartement.map((entry, index) => (
+  											<Cell
+    										key={entry.name}
+    										fill={COLORS[index % COLORS.length]} 
+  											/>
+										))}
 										</Pie>
 										<Tooltip />
 										<Legend />

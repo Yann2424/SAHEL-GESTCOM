@@ -7,7 +7,7 @@ import {
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../Vue/Administrateur/AppContext";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 
 export default function Connexion() {
 	const [step, setStep] = useState("welcome");
@@ -23,9 +23,9 @@ export default function Connexion() {
 	};
 
 	const soumission = async (data) => {
-		const { email, password, nom, role } = data;
+		const { email, password, name, role } = data;
 		try {
-			localStorage.setItem("username", nom || email.split("@")[0]);
+			localStorage.setItem("username", name || email.split("@")[0]);
 			localStorage.setItem("role", role);
 
 			if (step === "signup") {
@@ -35,35 +35,81 @@ export default function Connexion() {
 				// Mettre à jour le context
 				setCurrentUser({
 					email: user.email,
-					displayName: nom || user.email.split("@")[0],
+					displayName: name || user.email.split("@")[0],
 					uid: user.uid
 				});
 
-				if (role === "admin") navigate("/dashboard/administrateur");
-				else navigate("/dashboard/responsable");
+				if (role === "admin") {
+					const userRef = query(
+							collection(db,"Utilisateurs"),
+							where("role","==","admin")
+					)
+					const get = await getDocs(userRef)
+					if(get.size >= 2){
+						await auth.signOut()
+						alert("Impossible de se connecter: le nombre d'admin est atteint")
+						return
+					}
+					await setDoc(doc(db, "Utilisateurs", email), {
+					nom : name ||data.email|| nom || data.nom || user.email.split("@")[0],
+    				email: email,
+    				role: "admin",
+    				active: true 
+  				});
+					navigate("/dashboard/administrateur");
+				}
+				else {
+					alert("Vous ne pouvez pas vous inscrire en etant responsable")
+				}
 
 			} else if (step === "login") {
 				const userCredential = await signInWithEmailAndPassword(auth, email, password);
 				const user = userCredential.user;
-
+				
+				const userEmail = user.email
+					const qUser = query(
+						collection(db,"Utilisateurs"),
+						where("email","==",userEmail)
+					)
+					const userDocs = await getDocs(qUser)
+					const userName= userDocs.docs[0].data().name
+			
+					// Vérifier dans Firestore
+					const querySnapshot = await getDocs(
+						query(collection(db, "Departements"), where("manager", "==", userName))
+					);
 
 				// Mettre à jour le context
 				setCurrentUser({
 					email: user.email,
-					displayName: localStorage.getItem("username") || user.email.split("@")[0],
+					displayName: userName,
 					uid: user.uid
 				});
 
 				const userRole = localStorage.getItem("role") || "admin";
-				if (userRole === "admin") navigate("/dashboard/administrateur");
+				if (userRole === "admin") {
+
+
+					const docRef = doc(db,"Utilisateurs",user.email)
+					const docSnapshot = await getDoc(docRef)
+					const data = docSnapshot.data();
+					
+					// Vérifier le rôle
+					if (data.role !== "admin") {
+  						await auth.signOut();
+  						alert("Vous n'êtes pas autorisé a la page admin ");
+						return;
+					}
+					navigate("/dashboard/administrateur");
+				}
 				else {
-					const managerName = user.email.split("@")[0];
-
-    			// Vérifier dans Firestore
-    			const querySnapshot = await getDocs(
-      				query(collection(db, "Departements"), where("manager", "==", managerName))
-    			);
-
+					
+					
+					if (querySnapshot.empty) {
+						  await auth.signOut();
+							  alert("Aucun département trouvé pour ce responsable");
+						  return;
+					}
 
     			const departementData = querySnapshot.docs[0].data();
 
@@ -80,8 +126,7 @@ export default function Connexion() {
 			setError("");
 		} catch (err) {
 			setError("Erreur : " + err.message);
-			console.log(err);
-			
+			console.log(err);	
 		}
 	};
 

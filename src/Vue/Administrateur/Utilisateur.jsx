@@ -110,7 +110,7 @@ function Utilisateur() {
         <div className="user-list-section">
           <div className="add-user-section">
             <button onClick={() => setShowForm(!showForm)}>
-              {showForm ? "Annuler" : "Ajouter un utilisateur"}
+              {showForm ? "Annuler" : "Ajouter un Responsable"}
             </button>
           </div>
 
@@ -166,7 +166,7 @@ function Utilisateur() {
                 </h3>
                 <p>Email : {selectedUser.email}</p>
                 <p>Téléphone : {selectedUser.téléphone}</p>
-                <p>Rôle : {selectedUser.role || "Utilisateur"}</p>
+                <p>Rôle : {selectedUser.role || "Responsable"}</p>
               </div>
               <div className="card">
                 <h3>
@@ -276,7 +276,6 @@ function Utilisateur() {
                 >
                   <option value="">Sélectionnez un rôle</option>
                   <option value="responsable">Responsable</option>
-                  <option value="utilisateur">Utilisateur</option>
                 </select>
 
                 <button type="submit" className="bt">

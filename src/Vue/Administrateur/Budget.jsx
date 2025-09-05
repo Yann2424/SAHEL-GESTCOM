@@ -116,7 +116,7 @@ function BudgetPage() {
             >
               <option value="">
                 {form.departement
-                  ? "Sélectionnez un responsable/utilisateur"
+                  ? "Sélectionnez le responsable"
                   : "Saisissez un département d'abord"}
               </option>
 

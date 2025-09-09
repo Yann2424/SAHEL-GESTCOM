@@ -150,7 +150,7 @@ export const GetManagerFDepartement = async (datas) => {
   try {
     
     const q = query(
-      collection(db, "Departement"),
+      collection(db, "Departements"),
       where("name", "==", datas.name)
     );
 

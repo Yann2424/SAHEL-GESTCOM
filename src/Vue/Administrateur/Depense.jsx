@@ -2,10 +2,14 @@ import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import "./Departement.css";
 import { NewDepense, GetDepense, UpdateDepense, DeleteDepense } from "../../Modules/Depense/Depense_firebase"; 
-import { GetUser } from "../../Modules/User/User_firebase"; // pour récupérer les utilisateurs
+import { GetManagerFDepartement, GetUser } from "../../Modules/User/User_firebase"; // pour récupérer les utilisateurs
+import { GetDepartement } from "../../Modules/Departement/Departement_firebase.jsx";
 
 function DepensePage() {
   const [depenses, setDepenses] = useState([]);
+  const [departments,setDepartments] = useState([])
+  const [forms, setForms] = useState({ name: "", manager: "" });
+  const [loading,setLoading] = useState([])
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({
@@ -16,6 +20,22 @@ function DepensePage() {
     montant: "",
   });
   const [editId, setEditId] = useState(null);
+
+  // Charger les départements
+      useEffect(() => {
+        const fetchDepartments = async () => {
+          const data = await GetDepartement();
+          if (Array.isArray(data)) {
+            setDepartments(data);
+          } else {
+            console.error("Données reçues non valides :", data);
+            setDepartments([]);
+          }
+          setLoading(false);
+        };
+        fetchDepartments();
+      }, []);
+  
 
   // Charger les dépenses
   useEffect(() => {
@@ -69,10 +89,21 @@ function DepensePage() {
     (d.departement || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  // Filtrer les utilisateurs selon le département saisi
-  const filteredUsersByDept = users.filter(
-    (u) => (u.department || "").toLowerCase() === form.departement.toLowerCase()
-  );
+  const handleChangeDepartement =async (e)=>{
+      const dept = e.target.value
+      setForms({...forms, name: dept, manager:''})
+      if(dept){
+        const NomManager = await GetManagerFDepartement({name: dept})
+        if(NomManager){
+          setForm((prev) => ({
+            ...prev,
+            departement: dept,
+            responsable: NomManager
+          }));
+        }
+      }
+    }
+  
 
   return (
     <div className="dashboard">
@@ -83,33 +114,28 @@ function DepensePage() {
             <h3>{editId ? "Modifier une dépense" : "Ajouter une dépense"}</h3>
             <br />
 
-            {/* Input département */}
-            <input
-              type="text"
-              placeholder="Nom du département"
-              value={form.departement}
-              onChange={(e) => setForm({ ...form, departement: e.target.value, responsable: "" })}
-              required
+            
+            <select
+  						value={forms.name}
+  						onChange={(e) => handleChangeDepartement(e)}
+  						required
+						>
+  							<option value="">-- Sélectionnez un département --</option>
+  							{departments.map((dep, i) => (
+    							<option key={i} value={dep.name}>
+      								{dep.name}
+    							</option>
+  							))}
+						</select>
+
+            <input type="text" 
+                placeholder="manager"
+                value={form.responsable}
+                readOnly
+                required
             />
 
-            {/* Select responsable filtré par département */}
-            <select
-              value={form.responsable}
-              onChange={(e) => setForm({ ...form, responsable: e.target.value })}
-              required
-              disabled={!form.departement}
-            >
-              <option value="">
-                {form.departement
-                  ? "Sélectionnez le responsable"
-                  : "Saisissez un département d'abord"}
-              </option>
-              {filteredUsersByDept.map((user, i) => (
-                <option key={i} value={user.name}>
-                  {user.name} ({user.role || "Utilisateur"})
-                </option>
-              ))}
-            </select>
+            
 
             <input
               type="text"

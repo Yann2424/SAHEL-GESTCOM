@@ -40,7 +40,6 @@ const Dashboard = () => {
 		totalDepartments: 0,
 		totalBudgets: 0,
 		totalExpenses: 0,
-		totalReports: 0,
 	});
 	const [departments, setDepartments] = useState([]);
 	const [budgets, setBudgets] = useState([]);
@@ -243,11 +242,7 @@ const Dashboard = () => {
 								<h3>{stats.totalBudgets}</h3>
 								<p>Budgets</p>
 							</div>
-							<div className="stat-card rapport">
-								<FaFileAlt className="stat-icon" />
-								<h3>{stats.totalReports}</h3>
-								<p>Rapports</p>
-							</div>
+							
 							<div className="stat-card depense">
 								<FaMoneyBillWave className="stat-icon" />
 								<h3>{stats.totalExpenses.toLocaleString()} F</h3>

@@ -91,6 +91,7 @@ textarea {
   flex-direction: row;
   padding: 20px;
   gap: 20px;
+  
 }
 
 .search-container {
@@ -166,6 +167,7 @@ textarea {
   margin-bottom: 15px;
   border-radius: 5px;
   color: black;
+  width: 100%
 }
 
 .card h3 {

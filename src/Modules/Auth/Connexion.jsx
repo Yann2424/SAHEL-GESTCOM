@@ -29,42 +29,31 @@ export default function Connexion() {
 			localStorage.setItem("role", role);
 
 			if (step === "signup") {
-				const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-				const user = userCredential.user;
-
-				// Mettre à jour le context
-				setCurrentUser({
-					email: user.email,
-					displayName: name || user.email.split("@")[0],
-					uid: user.uid
-				});
-
-				if (role === "admin") {
-					const userRef = query(
-							collection(db,"Utilisateurs"),
-							where("role","==","admin")
-					)
-					const get = await getDocs(userRef)
-					if(get.size >= 2){
-						await auth.signOut()
-						alert("Impossible de se connecter: le nombre d'admin est atteint")
-						return
-					}
-					await setDoc(doc(db, "Utilisateurs", email), {
-					nom : name ||data.email|| nom || data.nom || user.email.split("@")[0],
-    				email: email,
-    				role: "admin",
-    				active: true 
-  				});
-					navigate("/dashboard/administrateur");
-				}
-				else {
-					alert("Vous ne pouvez pas vous inscrire en etant responsable")
-				}
 
 			} else if (step === "login") {
 				const userCredential = await signInWithEmailAndPassword(auth, email, password);
-				const user = userCredential.user;
+				
+				const userRole = localStorage.getItem("role") || "admin";
+				if (userRole === "admin") {
+					const user = userCredential.user;
+
+					const docRef = doc(db,"Utilisateurs",user.email)
+					const docSnapshot = await getDoc(docRef)
+					const data = docSnapshot.data();
+					if(!docSnapshot.exists()){
+						alert("l'utilisateur n'existe pas")
+						return
+					}
+					// Vérifier le rôle
+					if (data.role !== "admin") {
+  						await auth.signOut();
+  						alert("Vous n'êtes pas autorisé a la page admin ");
+						return;
+					}
+					navigate("/dashboard/administrateur");
+				}
+				else {
+					const user = userCredential.user;
 				
 				const userEmail = user.email
 					const qUser = query(
@@ -73,7 +62,8 @@ export default function Connexion() {
 					)
 					const userDocs = await getDocs(qUser)
 					const userName= userDocs.docs[0].data().name
-			
+					console.log("username",userName);
+					
 					// Vérifier dans Firestore
 					const querySnapshot = await getDocs(
 						query(collection(db, "Departements"), where("manager", "==", userName))
@@ -86,24 +76,6 @@ export default function Connexion() {
 					uid: user.uid
 				});
 
-				const userRole = localStorage.getItem("role") || "admin";
-				if (userRole === "admin") {
-
-
-					const docRef = doc(db,"Utilisateurs",user.email)
-					const docSnapshot = await getDoc(docRef)
-					const data = docSnapshot.data();
-					
-					// Vérifier le rôle
-					if (data.role !== "admin") {
-  						await auth.signOut();
-  						alert("Vous n'êtes pas autorisé a la page admin ");
-						return;
-					}
-					navigate("/dashboard/administrateur");
-				}
-				else {
-					
 					
 					if (querySnapshot.empty) {
 						  await auth.signOut();
@@ -143,17 +115,12 @@ export default function Connexion() {
 						solution moderne, intuitive et sécurisée pour une gestion optimale.
 					</p>
 					<button
-						onClick={() => setStep("signup")}
+						onClick={() => setStep("login")}
 						className="py-3 px-10 rounded-3xl font-bold bg-gradient-to-br from-[#0b3d91] to-[#f29544] hover:opacity-90 transition text-white text-xl"
 					>
-						S'inscrire
+						Se Connecter
 					</button>
-					<p className="mt-4 text-lg">
-						Vous avez déjà un compte ?{" "}
-						<span className="underline cursor-pointer" onClick={() => setStep("login")}>
-							Se connecter
-						</span>
-					</p>
+					
 				</>
 			)}
 
@@ -216,23 +183,7 @@ export default function Connexion() {
 						</button>
 					</form>
 
-					<p className="mt-4 text-sm">
-						{step === "signup" ? (
-							<>
-								Vous avez déjà un compte ?{" "}
-								<span className="text-[#0b3d91] font-semibold cursor-pointer" onClick={() => setStep("login")}>
-									Se connecter
-								</span>
-							</>
-						) : (
-							<>
-								Vous n'avez pas de compte ?{" "}
-								<span className="text-[#0b3d91] font-semibold cursor-pointer" onClick={() => setStep("signup")}>
-									S'inscrire
-								</span>
-							</>
-						)}
-					</p>
+					
 
 					<p className="mt-2 text-sm">
 						<span className="text-[#0b3d91] font-semibold cursor-pointer" onClick={welcome}>

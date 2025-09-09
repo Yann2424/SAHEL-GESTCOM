@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import "./Departement.css"; 
 import { FaEdit } from "react-icons/fa";
 import { NewBudget, GetBudget, UpdatedBudget } from "../../Modules/Budget/Budget_firebase";
-import { GetUser } from "../../Modules/User/User_firebase";
+import { GetManagerFDepartement, GetUser } from "../../Modules/User/User_firebase";
+import { GetDepartement } from "../../Modules/Departement/Departement_firebase.jsx";
 
 function BudgetPage() {
   const [budgets, setBudgets] = useState([]);
+  const [departments,setDepartments] = useState([])
+  const [forms, setForms] = useState({ name: "", manager: "" });
   const [users, setUsers] = useState([]);
+  const [loading,setLoading] = useState(true)
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({
     departement: "",
@@ -16,6 +20,22 @@ function BudgetPage() {
     description: ""
   });
   const [editIndex, setEditIndex] = useState(null);
+
+  // Charger les départements
+    useEffect(() => {
+      const fetchDepartments = async () => {
+        const data = await GetDepartement();
+        if (Array.isArray(data)) {
+          setDepartments(data);
+        } else {
+          console.error("Données reçues non valides :", data);
+          setDepartments([]);
+        }
+        setLoading(false);
+      };
+      fetchDepartments();
+    }, []);
+
 
   // Charger les budgets
   useEffect(() => {
@@ -69,14 +89,20 @@ function BudgetPage() {
     b.departement?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Filtrer les utilisateurs selon le département saisi
-  const filteredUsersByDept = users
-    .filter(u => (u.department || '').toLowerCase() === form.departement.toLowerCase())
-    .sort((a, b) => {
-      if (a.role === "Responsable" && b.role !== "Responsable") return -1;
-      if (a.role !== "Responsable" && b.role === "Responsable") return 1;
-      return a.name.localeCompare(b.name);
-    });
+  const handleChangeDepartement =async (e)=>{
+    const dept = e.target.value
+    setForms({...forms, name: dept, manager:''})
+    if(dept){
+      const NomManager = await GetManagerFDepartement({name: dept})
+      if(NomManager){
+        setForm((prev) => ({
+          ...prev,
+          departement: dept,
+          responsable: NomManager
+        }));
+      }
+    }
+  }
 
   return (
     <div className="dashboard">
@@ -88,44 +114,27 @@ function BudgetPage() {
             <h3>{editIndex !== null ? "Modifier un budget" : "Ajouter un budget"}</h3><br />
 
             {/* Input département */}
-            <input
-              type="text"
-              placeholder="Nom du département"
-              value={form.departement}
-              onChange={(e) => setForm({ ...form, departement: e.target.value, responsable: "" })}
-              required
-            />
-
-            {/* Select responsables/utilisateurs du département */}
             <select
-              value={form.responsable}
-              onChange={(e) => {
-                const selectedUser = users.find(u => u.name === e.target.value);
-                if (selectedUser) {
-                  setForm({
-                    ...form,
-                    responsable: selectedUser.name,
-                    departement: selectedUser.department
-                  });
-                } else {
-                  setForm({ ...form, responsable: "" });
-                }
-              }}
-              required
-              disabled={!form.departement}
-            >
-              <option value="">
-                {form.departement
-                  ? "Sélectionnez le responsable"
-                  : "Saisissez un département d'abord"}
-              </option>
+  						value={forms.name}
+  						onChange={(e) => handleChangeDepartement(e)}
+  						required
+						>
+  							<option value="">-- Sélectionnez un département --</option>
+  							{departments.map((dep, i) => (
+    							<option key={i} value={dep.name}>
+      								{dep.name}
+    							</option>
+  							))}
+						</select>
 
-              {filteredUsersByDept.map((user, i) => (
-                <option key={i} value={user.name}>
-                  {user.name} ({user.role || ""})
-                </option>
-              ))}
-            </select>
+                <input type="text" 
+                placeholder="manager"
+                value={form.responsable}
+                readOnly
+                required
+                />
+      
+          
 
             <input
               type="number"
@@ -141,6 +150,8 @@ function BudgetPage() {
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
               required
+              min={new Date(Date.now()-86400000).toISOString().split("T")[0]}
+              max={new Date().toISOString().split("T")[0]}
             />
 
             <textarea

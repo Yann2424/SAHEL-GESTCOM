@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 import { NewUser, GetUser, UpdateUser } from "../../Modules/User/User_firebase";
 import { GetDepenseFUser } from "../../Modules/UtilisateurR/Depense/DepenseRes"; //on importe ta fonction
+import { GetDepartementFManager } from "../../Modules/Departement/Departement_firebase.jsx";
 
 function Utilisateur() {
   const [search, setSearch] = useState("");
@@ -15,6 +16,7 @@ function Utilisateur() {
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [userExpenses, setUserExpenses] = useState([]); // Dépenses de l’utilisateur sélectionné
+  const [userDepartement,setUserDepartement] = useState("")
 
   const departmentList = [
     "Finance",
@@ -30,10 +32,18 @@ function Utilisateur() {
     name: "",
     email: "",
     téléphone: "",
-    department: "",
-    role: "",
   });
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(()=>{
+    const fetchDepartments = async ()=>{
+      if(selectedUser && selectedUser.name){
+        const dep = await GetDepartementFManager({name: selectedUser.name})
+        setUserDepartement(dep || '')
+      }
+    }
+    fetchDepartments()
+  },[selectedUser])
 
   // Charger tous les utilisateurs
   useEffect(() => {
@@ -74,7 +84,7 @@ function Utilisateur() {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (newUser.name && newUser.email && newUser.department && newUser.role) {
+    if (newUser.name && newUser.email) {
       await NewUser(newUser);
       setUsers([...users, newUser]);
       setNewUser({
@@ -105,6 +115,7 @@ function Utilisateur() {
   );
 
   return (
+    
     <div className="dashboard">
       <main className="main">
         <div className="user-list-section">
@@ -172,7 +183,7 @@ function Utilisateur() {
                 <h3>
                   <FaFolderOpen /> Département
                 </h3>
-                <p>{selectedUser.department}</p>
+                <p>{userDepartement || "aucun departement assigne"}</p>
               </div>
               <div className="card">
                 <h3>
@@ -242,42 +253,14 @@ function Utilisateur() {
                   required
                 />
                 <input
-                  type="text"
+                  type="phone"
                   placeholder="Téléphone"
                   value={newUser.téléphone}
                   onChange={(e) =>
                     setNewUser({ ...newUser, téléphone: e.target.value })
                   }
+                  required
                 />
-
-                {/* Select des départements fixe */}
-                <select
-                  value={newUser.department}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, department: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">Sélectionnez un département</option>
-                  {departmentList.map((dep, i) => (
-                    <option key={i} value={dep}>
-                      {dep}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Select du rôle */}
-                <select
-                  value={newUser.role}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, role: e.target.value })
-                  }
-                  required
-                >
-                  <option value="">Sélectionnez un rôle</option>
-                  <option value="responsable">Responsable</option>
-                </select>
-
                 <button type="submit" className="bt">
                   Enregistrer
                 </button>

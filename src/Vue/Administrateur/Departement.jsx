@@ -18,6 +18,9 @@ function DepartmentsPage() {
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 	const [message, setMessage] = useState("");
+	const [Modal,setModal] = useState(false)
+	const [newDept,setNewDept] = useState('')
+	const [Modals,setModals] = useState(true)
 
 	// Charger les départements
 	useEffect(() => {
@@ -116,39 +119,129 @@ function DepartmentsPage() {
 		  )
 		: [];
 
-	// Filtrer les utilisateurs du département saisi
-	const filteredUsersByDept = users
-		.filter((u) => (u.department || "").toLowerCase() === form.name.toLowerCase())
-		.sort((a, b) => {
-			if (a.role === "Responsable" && b.role !== "Responsable") return -1;
-			if (a.role !== "Responsable" && b.role === "Responsable") return 1;
-			return a.name.localeCompare(b.name);
-		});
+		  const getuseroption = ()=>{
+			return users.filter((u)=> u && u.name).sort((a,b)=>a.name.localeCompare(b.name))
+		  }
 
 	if (loading) {
 		return <div>Chargement...</div>;
 	}
+	const gerer = (i)=>{
+		 editDepartment(i)
+		 setModals(true)
+	}
 
 	return (
 		<div className="dashboard">
-			<main className="main">
-				<div className="departments-page">
-					<h2>Gestion des départements</h2>
-					{message && <div className="notification">{message}</div>}
-
-					<br />
-					<form onSubmit={handleSubmit} className="card">
-						<h3>Ajouter un département</h3>
-						<br />
-
-						{/* Input pour saisir le nom du département */}
-						<input
-							type="text"
-							placeholder="Nom du département"
-							value={form.name}
-							onChange={(e) => setForm({ ...form, name: e.target.value, manager: "" })}
-							required
+			{Modal && (
+				<div className="modal">
+					<div className="modal-content">
+						<button 
+						className="close-button"
+						onClick={()=> setModal(false)}
+						>
+							&times;
+						</button>
+						<h3>ajouter un nouveau departement</h3>
+						<input 
+						type="text" 
+						placeholder="nom departement"
+						value={newDept}
+						onChange={(e)=> setNewDept(e.target.value)}
+						required
 						/>
+						<select
+							value={form.manager}
+							onChange={(e) => {
+								const selectedUser = users.find((u) => u.name === e.target.value);
+								if (selectedUser) {
+									setForm({
+										...form,
+										manager: selectedUser.name,
+										department: newDept,
+									});
+								} else {
+									setForm({ ...form, manager: "", department: "" });
+								}
+							}}
+							required
+							disabled={!newDept.trim()}
+						>
+							<option value="">
+								{newDept
+									? "Sélectionnez un responsable"
+									: "ajouter un département d'abord"}
+							</option>
+							{getuseroption().map((u,i)=>(
+								<option key={i} value={u.name}>
+									{u.name}
+								</option>
+							))}
+					
+						</select>
+						<br />
+						<button
+  className="btn"
+  onClick={async () => {
+    if (newDept.trim()) {
+      const newdeptdata = { name: newDept, active: true, manager: form.manager };
+
+      // ⚡ Firestore renvoie true si le département est bien créé
+      const success = await NewDepartement(newdeptdata);
+
+      if (success) {
+        setDepartments([...departments, newdeptdata]); 
+        setForm({ ...form, name: newDept, manager: "" });
+        setNewDept("");
+        setModal(false);
+        console.log("Département ajouté dans le select ");
+      } else {
+        console.log("Création du département refusée ");
+      }
+    }
+  }}
+>
+  Enregistrer
+</button>
+					</div>
+				</div>
+			)}
+			<main className="main">
+				<div className="departments-page ">
+					<div className="flex justify-between">
+						<h2>Gestion des départements</h2>
+					{message && <div className="notification">{message}</div>}
+					<button 
+					type="button"
+					className="btn"
+					onClick={()=> setModal(true)}
+					>
+						Ajouter un nouveau departement
+					</button>
+					</div>
+					<br />
+					{Modals &&  (
+						<div>
+							<button 
+							className="text-black text-2xl p-2 hover:bg-slate-500 "
+							onClick={()=> setModals(false)}>&times;</button>
+							<form onSubmit={handleSubmit} className="card">
+						<div className="flex justify-between">
+							<h3>Modifier un Departement</h3>
+						</div>
+						{/* Select pour choisir le nom du département (depuis Firestore) */}
+						<select
+  						value={form.name}
+  						onChange={(e) => setForm({ ...form, name: e.target.value, manager: "" })}
+  						required
+						>
+  							<option value="">-- Sélectionnez un département --</option>
+  							{departments.map((dep, i) => (
+    							<option key={i} value={dep.name}>
+      								{dep.name}
+    							</option>
+  							))}
+						</select>
 
 						{/* Select qui affiche les responsables/utilisateurs du département saisi */}
 						<select
@@ -170,15 +263,15 @@ function DepartmentsPage() {
 						>
 							<option value="">
 								{form.name
-									? "Sélectionnez un responsable/utilisateur"
-									: "Saisissez un département d'abord"}
+									? "Sélectionnez un responsable"
+									: "selectionner un département d'abord"}
 							</option>
-
-							{filteredUsersByDept.map((user, i) => (
-								<option key={i} value={user.name}>
-									{user.name} ({user.role || "Utilisateur"})
+							{getuseroption().map((u,i)=>(
+								<option key={i} value={u.name}>
+									{u.name}
 								</option>
 							))}
+					
 						</select>
 
 						<br /><br />
@@ -191,6 +284,9 @@ function DepartmentsPage() {
 								: "Ajouter"}
 						</button>
 					</form>
+					
+						</div>
+					)}
 
 					<br />
 					<div className="search-container">
@@ -233,7 +329,7 @@ function DepartmentsPage() {
 									<td>
 										<FaEdit
 											className="icon-edit"
-											onClick={() => editDepartment(i)}
+											onClick={() =>gerer(i)}
 										/>
 										<br />
 										<FaTrash
@@ -252,3 +348,142 @@ function DepartmentsPage() {
 }
 
 export default DepartmentsPage;
+
+
+// {/* <main className="main">
+// 				<div className="departments-page w-full ">
+// 					<div className="flex justify-between">
+// 						<h2>Gestion des départements</h2>
+// 					{message && <div className="notification">{message}</div>}
+// 					<button 
+// 					type="button"
+// 					className="btn"
+// 					onClick={()=> setModal(true)}
+// 					>
+// 						Ajouter un nouveau departement
+// 					</button>
+// 					</div>
+// 					<br />
+// 					{Modals &&  (
+// 						<div>
+// 							<button 
+// 							className="text-black text-2xl p-2 hover:bg-slate-500 "
+// 							onClick={()=> setModals(false)}>&times;</button>
+// 							<form onSubmit={handleSubmit} className="card">
+// 						<div className="flex justify-between">
+// 							<h3>Modifier un Departement</h3>
+// 						</div>
+// 						{/* Select pour choisir le nom du département (depuis Firestore) */}
+// 						<select
+//   						value={form.name}
+//   						onChange={(e) => setForm({ ...form, name: e.target.value, manager: "" })}
+//   						required
+// 						>
+//   							<option value="">-- Sélectionnez un département --</option>
+//   							{departments.map((dep, i) => (
+//     							<option key={i} value={dep.name}>
+//       								{dep.name}
+//     							</option>
+//   							))}
+// 						</select>
+
+// 						{/* Select qui affiche les responsables/utilisateurs du département saisi */}
+// 						<select
+// 							value={form.manager}
+// 							onChange={(e) => {
+// 								const selectedUser = users.find((u) => u.name === e.target.value);
+// 								if (selectedUser) {
+// 									setForm({
+// 										...form,
+// 										manager: selectedUser.name,
+// 										department: selectedUser.department,
+// 									});
+// 								} else {
+// 									setForm({ ...form, manager: "", department: "" });
+// 								}
+// 							}}
+// 							required
+// 							disabled={!form.name}
+// 						>
+// 							<option value="">
+// 								{form.name
+// 									? "Sélectionnez un responsable"
+// 									: "selectionner un département d'abord"}
+// 							</option>
+// 							{getuseroption().map((u,i)=>(
+// 								<option key={i} value={u.name}>
+// 									{u.name}
+// 								</option>
+// 							))}
+					
+// 						</select>
+
+// 						<br /><br />
+
+// 						<button type="submit" className="btn" disabled={submitting}>
+// 							{submitting
+// 								? "Chargement..."
+// 								: editIndex !== null
+// 								? "Mettre à jour"
+// 								: "Ajouter"}
+// 						</button>
+// 					</form>
+					
+// 						</div>
+// 					)}
+
+// 					<br />
+// 					<div className="search-container">
+// 						<input
+// 							type="text"
+// 							placeholder="Rechercher un département..."
+// 							value={search}
+// 							onChange={(e) => setSearch(e.target.value)}
+// 							className="search-bar"
+// 						/>
+// 					</div>
+
+// 					<table className="table">
+// 						<thead>
+// 							<tr>
+// 								<th>Nom du département</th>
+// 								<th>Responsable</th>
+// 								<th>Statut</th>
+// 								<th>Options</th>
+// 							</tr>
+// 						</thead>
+// 						<tbody>
+// 							{filteredDepartments.map((d, i) => (
+// 								<tr key={i}>
+// 									<td>{d.name}</td>
+// 									<td>{d.manager}</td>
+// 									<td>
+// 										{d.active ? (
+// 											<FaToggleOn
+// 												className="icon-active"
+// 												onClick={() => toggleActive(i)}
+// 											/>
+// 										) : (
+// 											<FaToggleOff
+// 												className="icon-inactive"
+// 												onClick={() => toggleActive(i)}
+// 											/>
+// 										)}
+// 									</td>
+// 									<td>
+// 										<FaEdit
+// 											className="icon-edit"
+// 											onClick={() =>gerer(i)}
+// 										/>
+// 										<br />
+// 										<FaTrash
+// 											className="icon-delete"
+// 											onClick={() => deleteDepartment(i)}
+// 										/>
+// 									</td>
+// 								</tr>
+// 							))}
+// 						</tbody>
+// 					</table>
+// 				</div>
+// 			</main> */}

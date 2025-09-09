@@ -32,6 +32,7 @@ import {
 	// refuserRapport,
 	GetRapportFUser,
 } from "../../Modules/UtilisateurR/Rapport/RapportR"; // adapte le chemin selon ton projet
+import { GetDepartementFManager } from "../../Modules/Departement/Departement_firebase.jsx";
 
 export default function DashboardResponsable() {
 	const { currentUser } = useContext(AppContext);
@@ -65,6 +66,8 @@ export default function DashboardResponsable() {
 			const departement = await GetDepartementFUser({
 				email: currentUser.email,
 			});
+			console.log("departement:",departement);
+			
 			setAssignedDepartment(departement || "Non attribué");
 			setResponsableName(currentUser.displayName || "Nom non défini");
 
@@ -368,13 +371,15 @@ export default function DashboardResponsable() {
 								<div className="md:col-span-2">
 									<label className="label">Date</label>
 									<input
-										type="date"
-										className="input"
-										value={depenseForm.date}
-										onChange={(e) =>
-											setDepenseForm({ ...depenseForm, date: e.target.value })
-										}
-										required
+									type="date"
+									className="input"
+									value={depenseForm.date}
+									onChange={(e) =>
+										setDepenseForm({ ...depenseForm, date: e.target.value })
+									}
+									required
+									min={new Date(Date.now()-86400000).toISOString().split("T")[0]}
+              						max={new Date().toISOString().split("T")[0]}
 									/>
 								</div>
 								<div className="md:col-span-4">

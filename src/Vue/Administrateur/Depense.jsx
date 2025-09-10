@@ -189,17 +189,17 @@ function DepensePage() {
               {filteredDepenses.map((d, i) => (
                 <tr key={i}>
                   <td>{d.departement}</td>
-                  <td>{d.responsable}</td>
+                  <td>{d.manager}</td>
                   <td>{d.type}</td>
                   <td>{d.motif}</td>
                   <td>{Number(d.montant).toLocaleString()} F</td>
                   <td>
                     <FaEdit className="icon-edit" onClick={() => editDepense(d)} />
-                    <FaTrash
+                    {/*<FaTrash
                       className="icon-delete"
                       onClick={() => deleteDepense(d)}
                       style={{ marginLeft: "8px", color: "red", cursor: "pointer" }}
-                    />
+                    />*/}
                   </td>
                 </tr>
               ))}

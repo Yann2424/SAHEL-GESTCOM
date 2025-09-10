@@ -27,9 +27,6 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "../Administrateur/AppContext";
 import {
 	NewRapportFUser,
-	GetRapports,
-	ValideRapport,
-	// refuserRapport,
 	GetRapportFUser,
 } from "../../Modules/UtilisateurR/Rapport/RapportR"; // adapte le chemin selon ton projet
 import { GetDepartementFManager } from "../../Modules/Departement/Departement_firebase.jsx";
@@ -72,15 +69,21 @@ export default function DashboardResponsable() {
 			setResponsableName(currentUser.displayName || "Nom non défini");
 
 			// Budget lié au département
+			let budget = null
 			if (departement) {
-				const budget = await GetbudgetFDepar({ departement });
-				setAssignedBudget(budget || 0);
+				 budget = await GetbudgetFDepar({ departement });
+				setAssignedBudget(budget?.montant || 0);
+				console.log('budget',budget);
+				
 			}
 
 			// Dépenses de l’utilisateur
 			const userData = await GetDepenseFUser({ email: currentUser.email });
-			setDepenses(userData?.expenses || []);
-			setRapport(userData?.rapport || "");
+			const filteredDepenses = userData?.expenses?.filter(
+				d=> d.budgetId === budget?.id
+			) || []
+			setDepenses(filteredDepenses)   
+			{/*setDepenses(userData?.expenses || [])*/};
 		};
 		fetchUserData();
 	}, [currentUser]);
@@ -98,6 +101,10 @@ export default function DashboardResponsable() {
 	const handleAddDepense = async (e) => {
 		e.preventDefault();
 		const { montant, date, motif, type } = depenseForm;
+		if(resteBudget < montant ){
+			alert('le montant de la depense est superieur au budget')
+			return
+		}
 		if (!montant || !date || !motif)
 			return alert("Veuillez remplir tous les champs.");
 		if (Number(montant) <= 0)
@@ -120,73 +127,10 @@ export default function DashboardResponsable() {
 		}
 	};
 
-	// --- Supprimer une dépense ---
-	const handleDelete = async (depense) => {
-		try {
-			await DeleteDepenseFUser({ email: currentUser.email }, depense.id);
-			setDepenses((prev) => prev.filter((d) => d.id !== depense.id));
-		} catch (err) {
-			console.log("Erreur suppression dépense:", err);
-		}
-	};
+	
+	
 
-	// --- Export PDF ---
-	const exportPDF = () => {
-		const doc = new jsPDF({ unit: "pt", format: "a4" });
-		const title = `Rapport financier – Département ${assignedDepartment}`;
-		const dateStr = new Date().toLocaleDateString();
-
-		doc.setFontSize(18);
-		doc.text(title, 40, 40);
-		doc.setFontSize(11);
-		doc.text(`${responsableName} | Date: ${dateStr}`, 40, 62);
-		doc.text(`Budget attribué: ${formatMoney(assignedBudget)} XAF`, 40, 80);
-		doc.text(`Total dépenses: ${formatMoney(totalDepenses)} XAF`, 40, 96);
-		doc.text(`Reste: ${formatMoney(resteBudget)} XAF`, 40, 112);
-
-		const rows = depenses.map((d) => [
-			new Date(d.date).toLocaleDateString(),
-			d.motif,
-			`${formatMoney(d.montant)} XAF`,
-		]);
-
-		autoTable(doc, {
-			head: [["Date", "Motif", "Montant"]],
-			body: rows.length ? rows : [["—", "Aucune dépense", "—"]],
-			startY: 130,
-			styles: { fontSize: 10, cellPadding: 6 },
-			headStyles: { fillColor: [34, 197, 94] },
-		});
-
-		const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : 150;
-		doc.setFontSize(13);
-		doc.text("Rapport du responsable:", 40, finalY);
-		doc.setFontSize(11);
-		const lines = doc.splitTextToSize(rapport || "(Aucun rapport saisi)", 515);
-		doc.text(lines, 40, finalY + 18);
-
-		doc.save(
-			`Rapport_${assignedDepartment}_${dateStr.replaceAll("/", "-")}.pdf`
-		);
-	};
-
-	// --- Envoi par mail ---
-	const openEmailClient = () => {
-		const subject = encodeURIComponent(
-			`Rapport financier – ${assignedDepartment}`
-		);
-		const body = encodeURIComponent(
-			`Bonjour,\n\nVeuillez trouver ci-joint le rapport financier.\n\nRésumé:\n- Budget: ${formatMoney(
-				assignedBudget
-			)} XAF\n- Dépenses: ${formatMoney(
-				totalDepenses
-			)} XAF\n- Reste: ${formatMoney(
-				resteBudget
-			)} XAF\n\n${rapport}\n\nCordialement,\n${responsableName}`
-		);
-		window.location.href = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
-	};
-
+	
 	const [rapport, setRapport] = useState("");
 	const [rapports, setRapports] = useState([]);
 	// --- Récupérer les rapports de l'utilisateur connecté ---
@@ -235,8 +179,8 @@ export default function DashboardResponsable() {
 						</h1>
 					</div>
 					<button
-						className="icon-btn"
-						onClick={() => setSidebarOpen((s) => !s)}
+						className={`icon-btn ${sidebarOpen? 'icon-btn' :'bg-transparent border-none cursor-pointer text-inherit text-base transition duration-300'}`}
+						onClick={() =>{console.log('click');setSidebarOpen(prev => !prev)}}
 						title="Basculer le menu"
 					>
 						<FaBars />
@@ -264,13 +208,7 @@ export default function DashboardResponsable() {
 						onClick={() => setActiveTab("depense")}
 						expanded={sidebarOpen}
 					/>
-					<NavItem
-						icon={<FaRegFileAlt />}
-						label="Rapport"
-						active={activeTab === "rapport"}
-						onClick={() => setActiveTab("rapport")}
-						expanded={sidebarOpen}
-					/>
+					
 				</nav>
 				<div className="mt-auto p-4 text-xs text-gray-500 border-t">
 					© 2025 Gescom
@@ -433,7 +371,7 @@ export default function DashboardResponsable() {
 											<th>Motif</th>
 											<th>Type</th>
 											<th className="text-right">Montant (XAF)</th>
-											<th>Option</th>
+											
 										</tr>
 									</thead>
 									<tbody>
@@ -450,15 +388,7 @@ export default function DashboardResponsable() {
 												<td>{new Date(d.date).toLocaleDateString()}</td>
 												<td>{d.motif}</td> <td>{d.type}</td>
 												<td className="text-right">{formatMoney(d.montant)}</td>
-												<td className="text-right">
-													<button
-														className="icon-btn danger"
-														title="Supprimer"
-														onClick={() => handleDelete(d)}
-													>
-														<FaTrash />
-													</button>
-												</td>
+												
 											</tr>
 										))}
 									</tbody>
@@ -481,80 +411,7 @@ export default function DashboardResponsable() {
 						</div>
 					</section>
 				)}
-				{activeTab === "rapport" && (
-					<section className="fade-in">
-						<div className="panel">
-							<h3 className="panel-title">Rédiger le rapport financier</h3>
-							<textarea
-								className="textarea"
-								rows={6}
-								placeholder="Saisissez ici votre rapport"
-								value={rapport}
-								onChange={(e) => setRapport(e.target.value)}
-							/>
-
-							<div className="flex gap-3 mt-3">
-								<button className="btn-primary" onClick={handleSendRapport}>
-									<FaPaperPlane className="mr-2" />
-									Soumettre
-								</button>
-								<button className="btn-secondary" onClick={exportPDF}>
-									<FaDownload className="mr-2" />
-									Exporter PDF
-								</button>
-								{/* <button className="btn-secondary" onClick={openEmailClient}>
-									<FaPaperPlane className="mr-2" />
-									Envoyer par email
-								</button> */}
-							</div>
-						</div>
-
-						<div className="panel mt-4">
-							<h3 className="panel-title">Mes rapports soumis</h3>
-							<div className="table-wrap">
-								<table className="table">
-									<thead>
-										<tr>
-											<th>Date</th>
-											<th>Rapports</th>
-											<th>Statuts</th>
-										</tr>
-									</thead>
-									<tbody>
-										{rapports.length === 0 && (
-											<tr>
-												<td colSpan={3} className="empty">
-													Aucun rapport soumis.
-												</td>
-											</tr>
-										)}
-										{rapports.map((r) => (
-											<tr key={r.id}>
-												<td>
-													{r.createdAt?.toDate().toLocaleDateString() || "—"}
-												</td>
-												<td>{r.rapport}</td>
-												<td>
-													<span
-														className={`px-2 py-1 rounded text-white text-sm ${
-															r.statut === "Valide"
-																? "bg-green-500"
-																: r.statut === "Refuse"
-																? "bg-red-500"
-																: "bg-yellow-500"
-														}`}
-													>
-														{r.statut}
-													</span>
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</section>
-				)}
+				
 			</main>
 		</div>
 	);

@@ -11,6 +11,7 @@ function BudgetPage() {
   const [forms, setForms] = useState({ name: "", manager: "" });
   const [users, setUsers] = useState([]);
   const [loading,setLoading] = useState(true)
+  const [formLoading,setFormLoading] = useState(false)
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({
     departement: "",
@@ -55,6 +56,10 @@ function BudgetPage() {
     };
     fetchUsers();
   }, []);
+  if(loading){
+    return(
+    <div>chargement...</div>
+  )}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,22 +67,28 @@ function BudgetPage() {
       alert("Veuillez remplir tous les champs");
       return;
     }
+    setFormLoading(true)
+    try{
+      if (editIndex !== null) {
+        const oldBudget = budgets[editIndex];
+        await UpdatedBudget(oldBudget, form, `${form.responsable}_${form.departement}`);
 
-    if (editIndex !== null) {
-      const oldBudget = budgets[editIndex];
-      await UpdatedBudget(oldBudget, form, `${form.responsable}_${form.departement}`);
+        const updatedBudgets = [...budgets];
+        updatedBudgets[editIndex] = form;
+        setBudgets(updatedBudgets);
 
-      const updatedBudgets = [...budgets];
-      updatedBudgets[editIndex] = form;
-      setBudgets(updatedBudgets);
+        setEditIndex(null);
+      } else {
+        await NewBudget(form);
+        setBudgets([...budgets, form]);
+      }
 
-      setEditIndex(null);
-    } else {
-      await NewBudget(form);
-      setBudgets([...budgets, form]);
+      setForm({ departement: "", responsable: "", montant: "", date: "", description: "" });
+    } catch(err){
+      console.log('erreur',err); 
+    } finally{
+      setFormLoading(false)
     }
-
-    setForm({ departement: "", responsable: "", montant: "", date: "", description: "" });
   };
 
   const editBudget = (index) => {
@@ -163,6 +174,7 @@ function BudgetPage() {
             <button type="submit" className="btn">
               {editIndex !== null ? "Modifier" : "Ajouter"}
             </button>
+            {formLoading && <div className="loaderyann"></div>}
           </form><br />
 
           <div className="search-container">

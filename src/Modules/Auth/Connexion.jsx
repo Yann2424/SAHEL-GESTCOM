@@ -25,8 +25,7 @@ export default function Connexion() {
 	const soumission = async (data) => {
 		const { email, password, name, role } = data;
 		try {
-			localStorage.setItem("username", name || email.split("@")[0]);
-			localStorage.setItem("role", role);
+			
 
 			if (step === "signup") {
 
@@ -44,6 +43,8 @@ export default function Connexion() {
 						alert("l'utilisateur n'existe pas")
 						return
 					}
+					localStorage.setItem("username", data.name || email.split("@")[0]);
+					localStorage.setItem("role", data.role);
 					// Vérifier le rôle
 					if (data.role !== "admin") {
   						await auth.signOut();
@@ -63,6 +64,8 @@ export default function Connexion() {
 					const userDocs = await getDocs(qUser)
 					const userName= userDocs.docs[0].data().name
 					console.log("username",userName);
+					localStorage.setItem("username", userName || email.split("@")[0]);
+					localStorage.setItem("role", userDocs.docs[0].data().role);
 					
 					// Vérifier dans Firestore
 					const querySnapshot = await getDocs(

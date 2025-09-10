@@ -21,6 +21,7 @@ function DepartmentsPage() {
 	const [Modal,setModal] = useState(false)
 	const [newDept,setNewDept] = useState('')
 	const [Modals,setModals] = useState(true)
+	
 
 	// Charger les départements
 	useEffect(() => {
@@ -181,28 +182,36 @@ function DepartmentsPage() {
 						</select>
 						<br />
 						<button
-  className="btn"
-  onClick={async () => {
-    if (newDept.trim()) {
-      const newdeptdata = { name: newDept, active: true, manager: form.manager };
+  						className="btn"
+  						onClick={async () => {
+    						if (newDept.trim()) {
+								setSubmitting(true)
+      							const newdeptdata = { name: newDept, active: true, manager: form.manager };
+								try{
+      								// ⚡ Firestore renvoie true si le département est bien créé
+      								const success = await NewDepartement(newdeptdata);
 
-      // ⚡ Firestore renvoie true si le département est bien créé
-      const success = await NewDepartement(newdeptdata);
+      								if (success) {
+        								setDepartments([...departments, newdeptdata]); 
+        								setForm({ ...form, name: newDept, manager: "" });
+       	 								setNewDept("");
+        								setModal(false);
+        								console.log("Département ajouté dans le select ");
+      								} else {
+        								console.log("Création du département refusée ");
+      								}
+								}catch(err){
+									console.log('erreur',err);
+								} finally{
+									setSubmitting(false)
+								}
+    						}
 
-      if (success) {
-        setDepartments([...departments, newdeptdata]); 
-        setForm({ ...form, name: newDept, manager: "" });
-        setNewDept("");
-        setModal(false);
-        console.log("Département ajouté dans le select ");
-      } else {
-        console.log("Création du département refusée ");
-      }
-    }
-  }}
->
-  Enregistrer
-</button>
+  						}}
+						disabled={submitting}
+						>
+  							{submitting? 'chargement' : 'enregistrer'}
+						</button>
 					</div>
 				</div>
 			)}
@@ -281,7 +290,7 @@ function DepartmentsPage() {
 								? "Chargement..."
 								: editIndex !== null
 								? "Mettre à jour"
-								: "Ajouter"}
+								: "Mettre à jour"}
 						</button>
 					</form>
 					

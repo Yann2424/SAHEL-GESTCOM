@@ -17,6 +17,7 @@ function Utilisateur() {
   const [departments, setDepartments] = useState([]);
   const [userExpenses, setUserExpenses] = useState([]); // Dépenses de l’utilisateur sélectionné
   const [userDepartement,setUserDepartement] = useState("")
+  const [loading,setLoading] = useState(false)
 
   const departmentList = [
     "Finance",
@@ -48,8 +49,10 @@ function Utilisateur() {
   // Charger tous les utilisateurs
   useEffect(() => {
     async function fetchUsers() {
+      setLoading(true)
       const data = await GetUser();
-      setUsers(data);
+      setUsers(data)
+      setLoading(false);
     }
     fetchUsers();
   }, []);
@@ -82,21 +85,36 @@ function Utilisateur() {
         user.department.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const isValidate = (phone)=> /^(69|68|67|65)[0-9]{7}$/.test(phone)
+
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (newUser.name && newUser.email) {
-      await NewUser(newUser);
-      setUsers([...users, newUser]);
-      setNewUser({
-        name: "",
-        email: "",
-        téléphone: "",
-        department: "",
-        role: "",
-      });
-      setShowForm(false);
+    if(!isValidate(newUser.téléphone)){
+      alert('le numero de telephone est invalide')
+      return
+    }
+    try {
+      setLoading(true)
+      if (newUser.name && newUser.email) {
+        await NewUser(newUser);
+        setUsers([...users, newUser]);
+        setNewUser({
+          name: "",
+          email: "",
+          téléphone: "",
+          department: "",
+          role: "",
+        });
+        setShowForm(false);
+      }
+    }catch(err){
+      console.log('erreur',err);
+      
+    }finally{
+      setLoading(false)
     }
   };
+  
 
   const HandleUpdateUser = async (updatedUser) => {
     if (!selectedUser) return;
@@ -136,33 +154,37 @@ function Utilisateur() {
           </div>
 
           <div className="user-list">
-            {filteredUsers.map((user, index) => (
-              <div
-                key={index}
-                className="user-item"
-                onClick={() => setSelectedUser(user)}
-              >
-                <FaUserCircle style={{ marginRight: "8px" }} />
-                {user.name}{" "}
-                {user.department && (
-                  <span style={{ color: "#555", fontSize: "0.9rem" }}>
-                    ({user.department})
-                  </span>
-                )}
-                {user.role && (
-                  <span
-                    style={{
-                      color: "#0b3d91",
-                      fontSize: "0.85rem",
-                      marginLeft: "5px",
-                    }}
-                  >
-                    [{user.role}]
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+  {loading ? (
+    <div className="loader"></div>
+  ) : (
+    filteredUsers.map((user, index) => (
+      <div
+        key={index}
+        className="user-item"
+        onClick={() => setSelectedUser(user)}
+      >
+        <FaUserCircle style={{ marginRight: "8px" }} />
+        {user.name}{" "}
+        {user.department && (
+          <span style={{ color: "#555", fontSize: "0.9rem" }}>
+            ({user.department})
+          </span>
+        )}
+        {user.role && (
+          <span
+            style={{
+              color: "#0b3d91",
+              fontSize: "0.85rem",
+              marginLeft: "5px",
+            }}
+          >
+            [{user.role}]
+          </span>
+        )}
+      </div>
+    ))
+  )}
+</div>
         </div>
 
         <div className="profile-section">
@@ -261,9 +283,11 @@ function Utilisateur() {
                   }
                   required
                 />
-                <button type="submit" className="bt">
-                  Enregistrer
-                </button>
+                {loading? (
+                  <div className="loading"></div>
+                ) : (
+                  <button type="submit" className="bt">Enregistrer</button>
+                )}
               </form>
             </div>
           </div>

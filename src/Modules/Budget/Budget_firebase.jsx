@@ -1,35 +1,37 @@
-import { collection, doc, getDoc, getDocs, setDoc, deleteDoc } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore"
 import { db } from "../firebase/firebase";
 
 
-export const NewBudget =async (datas)=>{
-  try{
+import {  addDoc } from "firebase/firestore";
+
+
+export const NewBudget = async (datas) => {
+  try {
     console.log("Datas reçues dans NewBudget:", datas);
-    if (!datas) {
+    if (!datas?.responsable || !datas?.departement) {
       console.log("Erreur : il manque des informations dans datas", datas);
       return;
     }
-    const docRef = doc (db,'Budgets',`${datas.responsable }_${datas.departement}`)
-    const docSnapshot = await getDoc(docRef)
 
-    if(docSnapshot.exists()){
-      console.log('Budget existe deja depuis from !')
-      return
-    }
-    await setDoc (docRef,datas)
-    console.log('Budget ajouter depuis from !')
-    
-  }catch(err){
-    console.log('erreur d"envoi',err)
+    // Ajouter le budget dans Firestore avec un ID auto-généré
+    const docRef = await addDoc(collection(db, "Budgets"), {
+      ...datas,
+      createAt: serverTimestamp()
+    });
+
+    console.log("Budget ajouté avec succès :", docRef.id);
+  } catch (err) {
+    console.log('Erreur lors de l’ajout du budget :', err);
   }
-}
+};
+
 
 export const GetBudget = async()=>{
   try{
     const querySnapshot = await getDocs (collection(db,'Budgets'))
     const dataList = querySnapshot.docs.map((doc)=>({
       id:doc.id,
-      ...doc.data()
+      ...doc.data(),
     }))
     return dataList
   } catch(err){
@@ -38,33 +40,25 @@ export const GetBudget = async()=>{
   }
 }
 
-export const UpdatedBudget = async (datas,newDatas,newName) =>{
-  try{
-    if (!datas?.departement) {
-      console.error("Ancien Budget invalide:", datas);
+export const UpdatedBudget = async (id, newDatas) => {
+  try {
+    if (!id) {
+      console.error("ID du budget manquant :", id);
       return;
     }
-    if (!newName) {
-      console.error("Nouveau Budget invalide:", newName);
-      return;
-    }
-    const docRef = doc(db,'Budgets',`${datas.responsable }_${datas.departement}`)
-    const docSnapshot = await getDoc(docRef)
-    if(!docSnapshot.exists()){
-      console.log('ce Budget n"existe pas');
-      return
-    }
-    
-    const newDocRef = doc(db,'Budgets',newName)
-    await setDoc(newDocRef,newDatas)
 
-    await deleteDoc(docRef)
-    console.log('Budget modifier !');
-    
-  } catch(err){
-    console.log('erreur lors de l/update :',err)
+    const docRef = doc(db, "Budgets", id);
+    const docSnapshot = await getDoc(docRef);
+
+    if (!docSnapshot.exists()) {
+      console.log("Ce budget n'existe pas :", id);
+      return;
+    }
+
+    // Mets à jour le budget existant
+    await setDoc(docRef, newDatas, { merge: true });
+    console.log("Budget modifié avec succès !");
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour du budget :", err);
   }
-}
-
-
-
+};

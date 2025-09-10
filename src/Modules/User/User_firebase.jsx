@@ -93,7 +93,8 @@ export const GetUser = async()=>{
     const dataList = querySnapshot.docs.map((doc)=>({
       id:doc.id,
       ...doc.data()
-    }))
+    })).filter((user)=> user.role !== 'admin')
+    console.log('user recuperer')
     return dataList
   } catch(err){
     console.log('erreur lors de la recuperation',err)

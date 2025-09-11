@@ -73,12 +73,12 @@ const Dashboard = () => {
 	// Récupération temps réel depuis Firebase
 	useEffect(() => {
 		const unsubUsers = onSnapshot(
-			collection(db, "Utilisateurs"),
+			(collection(db, "Utilisateurs")),
 			(snapshot) => {
 				const users = snapshot.docs.map((doc) => ({
 					id: doc.id,
 					...doc.data(),
-				}));
+				})).filter((user)=> user.role !== 'admin');
 				setStats((prev) => ({ ...prev, totalUsers: users.length }));
 			}
 		);
@@ -149,20 +149,49 @@ const Dashboard = () => {
 		);
 	}
 
-	 const budgetParDepartement = departments.map((dep) => {
-	 	const totalBudget = budgets
-	 		.filter((b) => b.departement === (dep.nom || dep.name))
-	 		.reduce((sum, b) => sum + (Number(b.montant || 0)), 0);
-	 	return { name: dep.nom || dep.name, budget: totalBudget };
-	 });
+		// const budgetParDepartement = departments.map((dep) => {
+		// const totalBudget = budgets
+		// 	.filter((b) => b.departement === (dep.nom || dep.name))
+		// 	.reduce((sum, b) => sum + (Number(b.montant || 0)), 0);
+		// return { name: dep.nom || dep.name, budget: totalBudget };
+		// });
+		const budgetParDepartement = departments.map((dep) => {
+			  const budgetDepartement = budgets
+			.filter((b) => b.departement === (dep.nom || dep.name))
+			.sort((a, b) => (b.date || 0) - (a.date || 0)); // trie par date si dispo
 
-	
-	 const depenseParBudget = budgets.map((b) => {
-	 	const totalDepense = expenses
-	 		.filter((e) => e.budgetId === b.id)
-			.reduce((sum, e) => sum + (e.montant || 0), 0);
-	 	return { name: b.departement || b.name, depense: totalDepense };
-	 });
+			  const dernierBudget = budgetDepartement[0]; // on prend le plus récent
+			  return {
+				name: dep.nom || dep.name,
+				budget: dernierBudget ? Number(dernierBudget.montant || 0) : 0,
+			  };
+		});
+
+
+		// const depenseParBudget = budgets.map((b) => {
+		// const totalDepense = expenses
+		// 	.filter((e) => e.budgetId === b.id)
+		// 	 .reduce((sum, e) => sum + (e.montant || 0), 0);
+		// return { name: b.departement || b.name, depense: totalDepense };
+		// });
+
+		const depenseParBudget = departments.map((dep) => {
+  			const budgetsDep = budgets
+    		.filter((b) => b.departement === (dep.nom || dep.name))
+    		.sort((a, b) => new Date(b.createdAt?.toDate?.() || b.createdAt) - new Date(a.createdAt?.toDate?.() || a.createdAt));
+
+  			const dernierBudget = budgetsDep[budgetsDep.length - 1]; // le plus récent
+  			if (!dernierBudget) return { name: dep.nom || dep.name, depense: 0 };
+
+  			const totalDepense = expenses
+    		.filter((e) => e.budgetId === dernierBudget.id) // 🔥 uniquement le dernier budget
+    		.reduce((sum, e) => sum + (e.montant || 0), 0);
+
+  			return { name: dep.nom || dep.name, depense: totalDepense };
+		});
+
+
+
 	 console.log(depenseParBudget,"depenseParBudget",budgets);
 	return (
 		<div className="dashboard">
@@ -177,7 +206,7 @@ const Dashboard = () => {
 							<FaTachometerAlt /> Dashboard
 						</li>
 						<li onClick={() => setActivePage("Utilisateur")}>
-							<FaUser /> Utilisateur
+							<FaUser /> Responsable
 						</li>
 						<li onClick={() => setActivePage("Departement")}>
 							<FaBuilding /> Département
@@ -230,7 +259,7 @@ const Dashboard = () => {
 							<div className="stat-card user">
 								<FaUser className="stat-icon" />
 								<h3>{stats.totalUsers}</h3>
-								<p>Utilisateurs</p>
+								<p>Responsable</p>
 							</div>
 							<div className="stat-card departement">
 								<FaBuilding className="stat-icon" />
@@ -243,11 +272,11 @@ const Dashboard = () => {
 								<p>Budgets</p>
 							</div>
 							
-							<div className="stat-card depense">
+							{/* <div className="stat-card depense">
 								<FaMoneyBillWave className="stat-icon" />
 								<h3>{stats.totalExpenses.toLocaleString()} F</h3>
 								<p>Total Dépenses</p>
-							</div>
+							</div> */}
 						</div>
 
 						<div className="charts-container">

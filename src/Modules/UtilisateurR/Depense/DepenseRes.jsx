@@ -168,3 +168,37 @@ export const DeleteDepenseFUser = async (datas,depenseId) => {
     console.log(" Erreur lors de la suppression :", err);
   }
 };
+
+
+
+export const GetDepensesFUser = async (datas) => {
+  try {
+    const q = query(
+      collection(db, "Utilisateurs"),
+      where("email", "==", datas.email)
+    );
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      console.log("L'utilisateur n'existe pas");
+      return null;
+    }
+
+    const userDoc = querySnapshot.docs[0];
+    const allExpenses = userDoc.data().expenses || [];
+
+    
+    const sortedExpenses = allExpenses.sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
+
+    
+    const lastFiveExpenses = sortedExpenses.slice(0, 5);
+
+    return { id: userDoc.id, expenses: lastFiveExpenses };
+  } catch (err) {
+    console.log("Erreur lors de la récupération", err);
+    return null;
+  }
+};
+

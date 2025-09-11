@@ -7,7 +7,7 @@ import {
   FaReceipt,
 } from "react-icons/fa";
 import { NewUser, GetUser, UpdateUser } from "../../Modules/User/User_firebase";
-import { GetDepenseFUser } from "../../Modules/UtilisateurR/Depense/DepenseRes"; //on importe ta fonction
+import { GetDepenseFUser, GetDepensesFUser } from "../../Modules/UtilisateurR/Depense/DepenseRes"; //on importe ta fonction
 import { GetDepartementFManager } from "../../Modules/Departement/Departement_firebase.jsx";
 
 function Utilisateur() {
@@ -67,7 +67,7 @@ function Utilisateur() {
   useEffect(() => {
     async function fetchExpenses() {
       if (selectedUser && selectedUser.email) {
-        const res = await GetDepenseFUser({ email: selectedUser.email });
+        const res = await GetDepensesFUser({ email: selectedUser.email });
         if (res && res.expenses) {
           setUserExpenses(res.expenses);
         } else {
@@ -118,12 +118,16 @@ function Utilisateur() {
 
   const HandleUpdateUser = async (updatedUser) => {
     if (!selectedUser) return;
-    await UpdateUser(selectedUser, updatedUser);
-    const updatedUsers = users.map((u) =>
-      u.email === selectedUser.email ? updatedUser : u
-    );
-    setUsers(updatedUsers);
-    setSelectedUser(updatedUser);
+    try{
+      await UpdateUser(selectedUser, updatedUser);
+      const updatedUsers = users.map((u) =>
+        u.email === selectedUser.email ? updatedUser : u
+      );
+      setUsers(updatedUsers);
+      setSelectedUser(updatedUser)
+    }catch(err){
+      console.log('erreur lors de la mise ajour du user',err);
+    }
   };
 
   // Total des dépenses d’un utilisateur
@@ -154,37 +158,37 @@ function Utilisateur() {
           </div>
 
           <div className="user-list">
-  {loading ? (
-    <div className="loader"></div>
-  ) : (
-    filteredUsers.map((user, index) => (
-      <div
-        key={index}
-        className="user-item"
-        onClick={() => setSelectedUser(user)}
-      >
-        <FaUserCircle style={{ marginRight: "8px" }} />
-        {user.name}{" "}
-        {user.department && (
-          <span style={{ color: "#555", fontSize: "0.9rem" }}>
-            ({user.department})
-          </span>
-        )}
-        {user.role && (
-          <span
-            style={{
-              color: "#0b3d91",
-              fontSize: "0.85rem",
-              marginLeft: "5px",
-            }}
-          >
-            [{user.role}]
-          </span>
-        )}
-      </div>
-    ))
-  )}
-</div>
+              {loading ? (
+                <div className="loader"></div>
+              ) : (
+                filteredUsers.map((user, index) => (
+                <div
+                  key={index}
+                  className="user-item"
+                  onClick={() => setSelectedUser(user)}
+                >
+                  <FaUserCircle style={{ marginRight: "8px" }} />
+                  {user.name}{" "}
+                  {user.department && (
+                    <span style={{ color: "#555", fontSize: "0.9rem" }}>
+                      ({user.department})
+                    </span>
+                  )}
+                  {user.role && (
+                    <span
+                      style={{
+                        color: "#0b3d91",
+                        fontSize: "0.85rem",
+                        marginLeft: "5px",
+                      }}
+                    >
+                      {/* [{user.role}] */}
+                    </span>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         <div className="profile-section">
@@ -232,14 +236,14 @@ function Utilisateur() {
                     </p>
                   </>
                 ) : (
-                  <p>Aucune dépense enregistrée pour cet utilisateur.</p>
+                  <p>Aucune dépense enregistrée pour ce responsable.</p>
                 )}
               </div>
             </div>
           ) : (
             <div>
               <h2>
-                <FaUserCircle /> Sélectionnez un utilisateur
+                <FaUserCircle /> Sélectionnez un responsable
               </h2>
               <p>Les informations apparaîtront ici.</p>
             </div>

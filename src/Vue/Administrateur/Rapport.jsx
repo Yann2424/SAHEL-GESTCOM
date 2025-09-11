@@ -55,10 +55,10 @@ function Rapport() {
     fetchExpenses();
   }, [selectedUser]);
 
-  const totalExpenses = userExpenses.reduce(
-    (sum, e) => sum + (e.montant || 0),
-    0
-  );
+  // const totalExpenses = userExpenses.reduce(
+  //   (sum, e) => sum + (e.montant || 0),
+  //   0
+  // );
 
   const filteredUsers = users.filter(
     (user) =>
@@ -66,6 +66,31 @@ function Rapport() {
       (user.department &&
         user.department.toLowerCase().includes(search.toLowerCase()))
   );
+
+  // Grouper les dépenses par mois
+const expensesByMonth = userExpenses.reduce((acc, expense) => {
+  if (!expense.date) return acc;
+
+  // Extraire l'année et le mois (format YYYY-MM)
+  const date = new Date(expense.date);
+  const monthKey = `${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}`;
+
+  if (!acc[monthKey]) acc[monthKey] = 0;
+  acc[monthKey] += expense.montant || 0;
+
+  return acc;
+}, {});
+
+  const expensesByMonthArray = Object.entries(expensesByMonth).map(
+  ([month, total]) => ({
+    month,
+    total
+  })
+);
+
+// Optionnel : trier du plus récent au plus ancien
+expensesByMonthArray.sort((a, b) => new Date(b.month + "-01") - new Date(a.month + "-01"));
+
 
   return (
     <div className="dashboard">
@@ -104,7 +129,7 @@ function Rapport() {
                           marginLeft: "5px",
                         }}
                       >
-                        [{user.role}]
+                        {/* [{user.role}] */}
                       </span>
                     )}
                   </div>
@@ -133,19 +158,18 @@ function Rapport() {
                             </li>
                           ))}
                         </ul>
-                        <p
-                          style={{
-                            marginTop: "10px",
-                            fontWeight: "bold",
-                            color: "#e74c3c",
-                          }}
-                        >
-                          Total : {totalExpenses.toLocaleString()} F
-                        </p>
+                        <ul>
+                          {expensesByMonthArray.map((e, i) => (
+                            <li key={i}>
+                              {e.month} : {e.total.toLocaleString()} F
+                            </li>
+                          ))}
+                        </ul>
                       </>
                     ) : (
                       <p>Aucune dépense enregistrée pour cet utilisateur.</p>
                     )}
+
                   </div>
                 </div>
               ) : (
@@ -166,3 +190,22 @@ function Rapport() {
 
 
 export default Rapport
+
+{/* <ul>
+                          {userExpenses.map((e, i) => (
+                            <li key={i}>
+                              {e.motif} - {e.date} :{" "}
+                              {e.montant.toLocaleString()} F
+                            </li>
+                          ))}
+                        </ul> */}
+                        // <p
+                        //   style={{
+                        //     marginTop: "10px",
+                        //     fontWeight: "bold",
+                        //     color: "#e74c3c",
+                        //   }}
+                        // >
+                        //   Total : {totalExpenses.toLocaleString()} F
+                        // </p>
+                        

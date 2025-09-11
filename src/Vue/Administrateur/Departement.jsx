@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./Departement.css";
+import './Departement.css'
 import { FaToggleOn, FaToggleOff, FaEdit, FaTrash } from "react-icons/fa";
 import {
 	NewDepartement,
@@ -16,11 +16,12 @@ function DepartmentsPage() {
 	const [form, setForm] = useState({ name: "", manager: "" });
 	const [editIndex, setEditIndex] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [loadingindex, setLoadingIndex] = useState(null)
 	const [submitting, setSubmitting] = useState(false);
 	const [message, setMessage] = useState("");
 	const [Modal,setModal] = useState(false)
 	const [newDept,setNewDept] = useState('')
-	const [Modals,setModals] = useState(true)
+	const [Modals,setModals] = useState(false)
 	
 
 	// Charger les départements
@@ -57,20 +58,27 @@ function DepartmentsPage() {
 	};
 
 	const toggleActive = async (index) => {
-		const updated = [...departments];
-		const departement = updated[index];
-		console.log("departement",departement)
-    	// Appel Firestore pour mettre à jour le statut du responsable
-    	await UpdateDepartement(departement, departement, departement.name);
-		updated[index].active = !updated[index].active;
-		setDepartments(updated);
+		try{
+			setLoadingIndex(index)
+			const updated = [...departments];
+			const departement = updated[index];
+			console.log("departement",departement)
+    		// Appel Firestore pour mettre à jour le statut du responsable
+    		await UpdateDepartement(departement, departement, departement.name);
+			updated[index].active = !updated[index].active;
+			setDepartments(updated);
 
-		if (updated[index].active) {
-			showMessage(`Le responsable ${updated[index].manager} est maintenant actif ✅`);
-		} else {
-			showMessage(`Le responsable ${updated[index].manager} est maintenant inactif ❌`);
+			if (updated[index].active) {
+				showMessage(`Le responsable ${updated[index].manager} est maintenant actif ✅`);
+			} else {
+				showMessage(`Le responsable ${updated[index].manager} est maintenant inactif ❌`);
+			}
+		}catch(err){
+			console.log('erreur lors de la mise a jour ',err)
+		}finally{
+			setLoadingIndex(false)
 		}
-	};
+	}
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -98,6 +106,7 @@ function DepartmentsPage() {
 
 			setForm({ name: "", manager: "" });
 			setSubmitting(false);
+			setModals(false)
 		}
 	};
 
@@ -133,18 +142,21 @@ function DepartmentsPage() {
 	}
 
 	return (
-		<div className="dashboard">
+		<div className="dashboard flex justify-center items-start h-screen w-full">
 			{Modal && (
 				<div className="modal">
-					<div className="modal-content">
-						<button 
-						className="close-button"
-						onClick={()=> setModal(false)}
+						<div className="p-[20px] rounded-[8px]  w-[500px]  relative ">
+							<button 
+							className="close-button absolute top-0 right-0 bg-red-500 w-20 h-20"
+							onClick={()=> setModal(false)}
 						>
 							&times;
 						</button>
-						<h3>ajouter un nouveau departement</h3>
-						<input 
+						<form action="" className="bg-[#fafafa] p-[15px] border-l-4 border-[#f29544]  rounded-[10px] text-black">
+						<div className="flex justify-between mb-3">
+							<h3>Ajouter un departement</h3>
+						</div>
+							<input 
 						type="text" 
 						placeholder="nom departement"
 						value={newDept}
@@ -212,10 +224,12 @@ function DepartmentsPage() {
 						>
   							{submitting? 'chargement' : 'enregistrer'}
 						</button>
-					</div>
+						</form>
+						</div>
+					
 				</div>
 			)}
-			<main className="main">
+			<main className="main top-0">
 				<div className="departments-page ">
 					<div className="flex justify-between">
 						<h2>Gestion des départements</h2>
@@ -230,11 +244,13 @@ function DepartmentsPage() {
 					</div>
 					<br />
 					{Modals &&  (
-						<div>
-							<button 
-							className="text-black text-2xl p-2 hover:bg-slate-500 "
-							onClick={()=> setModals(false)}>&times;</button>
-							<form onSubmit={handleSubmit} className="card">
+						<div className="modal">
+							<div className="p-[20px] rounded-[8px]  w-[500px]  relative ">
+								<button 
+								className="close-button absolute top-0 right-0 bg-red-500 w-20 h-20"
+								onClick={()=> setModals(false)}>&times;
+								</button>
+							<form onSubmit={handleSubmit} className="bg-[#fafafa] p-[15px] border-l-4 border-[#f29544]  rounded-[10px] text-black">
 						<div className="flex justify-between">
 							<h3>Modifier un Departement</h3>
 						</div>
@@ -293,6 +309,7 @@ function DepartmentsPage() {
 								: "Mettre à jour"}
 						</button>
 					</form>
+							</div>
 					
 						</div>
 					)}
@@ -323,7 +340,9 @@ function DepartmentsPage() {
 									<td>{d.name}</td>
 									<td>{d.manager}</td>
 									<td>
-										{d.active ? (
+										{loadingindex === i ? (
+											<div className="loaderyann"></div>
+											) : d.active ? (
 											<FaToggleOn
 												className="icon-active"
 												onClick={() => toggleActive(i)}
@@ -333,7 +352,8 @@ function DepartmentsPage() {
 												className="icon-inactive"
 												onClick={() => toggleActive(i)}
 											/>
-										)}
+										) 
+										}
 									</td>
 									<td>
 										<FaEdit

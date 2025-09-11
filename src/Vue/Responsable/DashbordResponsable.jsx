@@ -50,6 +50,7 @@ export default function DashboardResponsable() {
 	const [assignedDepartment, setAssignedDepartment] = useState("");
 	const [responsableName, setResponsableName] = useState("");
 	const [assignedBudget, setAssignedBudget] = useState(0);
+	const [loader,setloader] = useState(false)
 
 	// --- Récupérer les infos utilisateur, budget et dépenses ---
 	useEffect(() => {
@@ -119,11 +120,14 @@ export default function DashboardResponsable() {
 		};
 
 		try {
+			setloader(true)
 			await DepenseFUser(depense);
 			setDepenses((prev) => [depense, ...prev]);
 			setDepenseForm({ montant: "", date: "", motif: "", type: "" });
 		} catch (err) {
 			console.log("Erreur ajout dépense:", err);
+		}finally{
+			setloader(false)
 		}
 	};
 
@@ -354,10 +358,17 @@ export default function DashboardResponsable() {
 									</select>
 								</div>
 								<div className="md:col-span-12 flex items-end">
-									<button type="submit" className="btn-primary">
-										<FaPlus className="mr-2" />
-										Ajouter
+									<button type="submit" className="bg-orange-500 text-white px-4 py-2 rounded flex items-center justify-center">
+  										{loader ? (
+    										<div className="w-5 h-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+  											) : (
+    										<>
+      											<FaPlus className="mr-2"/>
+      											ajouter
+    										</>
+  										)}
 									</button>
+
 								</div>
 							</form>
 						</div>
@@ -383,8 +394,8 @@ export default function DashboardResponsable() {
 												</td>
 											</tr>
 										)}
-										{depenses.map((d, idx) => (
-											<tr key={idx}>
+										{depenses.map((d,idx) => (
+											<tr key={d.id || `${d.date}-${d.motif}-${idx}`}>
 												<td>{new Date(d.date).toLocaleDateString()}</td>
 												<td>{d.motif}</td> <td>{d.type}</td>
 												<td className="text-right">{formatMoney(d.montant)}</td>

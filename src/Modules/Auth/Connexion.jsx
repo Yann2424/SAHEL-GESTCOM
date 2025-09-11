@@ -12,6 +12,7 @@ import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase
 export default function Connexion() {
 	const [step, setStep] = useState("welcome");
 	const [error, setError] = useState("");
+	const [loader, setloader] = useState(false)
 	const { register, handleSubmit, reset, formState: { errors } } = useForm();
 	const navigate = useNavigate();
 	const { setCurrentUser } = useContext(AppContext);
@@ -26,7 +27,7 @@ export default function Connexion() {
 		const { email, password, name, role } = data;
 		try {
 			
-
+			setloader(true)
 			if (step === "signup") {
 
 			} else if (step === "login") {
@@ -102,11 +103,14 @@ export default function Connexion() {
 		} catch (err) {
 			setError("Erreur : " + err.message);
 			console.log(err);	
+		} finally{
+			setloader(false)
 		}
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0b3d91] to-[#f29544] p-4 text-center text-white">
+		<div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#213547] to-[#213547] p-4 text-center text-white">
+		{/* #0b3d91,#f29544 */}
 			{step === "welcome" && (
 				<>
 					<h1 className="text-6xl font-bold mb-3 animate-fadeIn">Bienvenue</h1>
@@ -114,7 +118,7 @@ export default function Connexion() {
 						GESCOM
 					</h2>
 					<p className="mb-8 text-lg max-w-xl">
-						Gérez votre argent et vos transactions simplement, grâce à une
+						Gérez votre argent et vos depenses simplement, grâce à une
 						solution moderne, intuitive et sécurisée pour une gestion optimale.
 					</p>
 					<button
@@ -166,8 +170,7 @@ export default function Connexion() {
 						/>
 						{errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
 
-						{error && <p className="text-red-500 text-sm">{error}</p>}
-
+						
 						<select
 							{...register("role", { required: "Veuillez choisir un rôle" })}
 							className="w-full p-3 border rounded-xl text-gray-900"
@@ -177,12 +180,17 @@ export default function Connexion() {
 							<option value="Responsable">Responsable</option>
 						</select>
 						{errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
+						{error && <p className="text-red-500 text-sm">{error}</p>}
 
 						<button
 							type="submit"
-							className="w-full py-3 rounded-3xl font-bold text-white bg-gradient-to-br from-[#0b3d91] to-[#f29544] hover:opacity-90 transition"
+							className="w-full py-3 rounded-3xl font-bold text-white bg-gradient-to-br from-[#0b3d91] to-[#f29544] hover:opacity-90 transition flex justify-center itmes-center"
 						>
-							{step === "signup" ? "S'inscrire" : "Se connecter"}
+							{loader ? (
+    							<div className="w-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin "></div>
+  								) : (
+    							step === "signup" ? "S'inscrire" : "Se connecter"
+  							)}
 						</button>
 					</form>
 

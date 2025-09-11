@@ -42,7 +42,7 @@ export default function DashboardResponsable() {
 		motif: "",
 		type: "",
 	});
-
+	const [nouveauType,setNouveauType] = useState('')
 	const [depenses, setDepenses] = useState([]);
 	// const [rapport, setRapport] = useState("");
 	const [adminEmail] = useState("admin@entreprise.com");
@@ -51,6 +51,13 @@ export default function DashboardResponsable() {
 	const [responsableName, setResponsableName] = useState("");
 	const [assignedBudget, setAssignedBudget] = useState(0);
 	const [loader,setloader] = useState(false)
+	const [type, setType] = useState(() => {
+  		const saved = localStorage.getItem("typeDepense");
+  		return saved
+    	? JSON.parse(saved)
+    	: ["Equipement", "Transport", "Logement", "Technicien"];
+	});
+	const [modals,setModals] = useState(false)
 
 	// --- Récupérer les infos utilisateur, budget et dépenses ---
 	useEffect(() => {
@@ -163,6 +170,19 @@ export default function DashboardResponsable() {
 			console.log("Erreur lors de l'envoi du rapport :", err);
 		}
 	};
+
+	const AddDepenseType = (e)=>{
+		e.preventDefault()
+		if(nouveauType && !type.includes(nouveauType)){
+			setType([...type,nouveauType])
+			setDepenseForm({...depenseForm, type: nouveauType})
+		}
+		setNouveauType('')
+		setModals(false)
+	}
+	useEffect(()=>{
+		localStorage.setItem('typeDepense',JSON.stringify(type))
+	},[type])
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex">
@@ -349,12 +369,14 @@ export default function DashboardResponsable() {
 										required
 									>
 										<option value="">Sélectionnez un type</option>
-										<option value="Fournitures">Fournitures</option>
+										{/* <option value="Equipement">Equipement</option>
 										<option value="Transport">Transport</option>
 										<option value="Logement">Logement</option>
-										<option value="Restaurant">Restaurant</option>
 										<option value="Technicien">Technicien</option>
-										<option value="Autre">Autre</option>{" "}
+										<option value="Autre">Autre</option>{" "} */}
+										{type.map((t,index)=>(
+											<option key={index} value="t">{t}</option>
+										))}
 									</select>
 								</div>
 								<div className="md:col-span-12 flex items-end">
@@ -368,9 +390,48 @@ export default function DashboardResponsable() {
     										</>
   										)}
 									</button>
+									<button type="button"
+									className="ml-2 px-3 py-1 rounded bg-blue-600 text-white"
+									onClick={()=> setModals(true)}
+									>ajouter un Type</button>
 
 								</div>
 							</form>
+							 {modals && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+            <h2 className="text-lg font-bold mb-4">Ajouter un nouveau type</h2>
+            <form onSubmit={AddDepenseType}>
+              <input
+                type="text"
+                value={nouveauType}
+                onChange={(e) => setNouveauType(e.target.value)}
+                className="w-full border p-2 rounded mb-4"
+                placeholder="Nom du type"
+                required
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="px-3 py-1 rounded bg-gray-400 text-white"
+                  onClick={() => setModals(false)}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 rounded bg-blue-600 text-white"
+                >
+                  Ajouter
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    
+  
+
 						</div>
 						<div className="panel mt-4">
 							<h3 className="panel-title">Historique des dépenses</h3>

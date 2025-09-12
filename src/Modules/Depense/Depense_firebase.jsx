@@ -19,7 +19,7 @@ export const GetDepense = async()=>{
     const dataList = querySnapshot.docs.map((doc)=>({
       id:doc.id,
       ...doc.data()
-    }))
+    })).filter((items)=> items.budgetId === undefined || items.budgetId === null)
     return dataList
   } catch(err){
     console.log('erreur lors de la recuperation',err)

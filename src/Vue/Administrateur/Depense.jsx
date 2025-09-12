@@ -4,6 +4,7 @@ import "./Departement.css";
 import { NewDepense, GetDepense, UpdateDepense, DeleteDepense } from "../../Modules/Depense/Depense_firebase"; 
 import { GetManagerFDepartement, GetUser } from "../../Modules/User/User_firebase"; // pour récupérer les utilisateurs
 import { GetDepartement } from "../../Modules/Departement/Departement_firebase.jsx";
+import { DepenseFUser } from "../../Modules/UtilisateurR/Depense/DepenseRes.jsx";
 
 function DepensePage() {
   const [depenses, setDepenses] = useState([]);
@@ -20,6 +21,7 @@ function DepensePage() {
     montant: "",
   });
   const [editId, setEditId] = useState(null);
+  const [loader,setLoader] = useState(false)
 
   // Charger les départements
       useEffect(() => {
@@ -58,7 +60,9 @@ function DepensePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.departement && form.responsable && form.type && form.motif && form.montant) {
+    setLoader(true)
+    try{
+      if (form.departement && form.responsable && form.type && form.motif && form.montant) {
       if (editId) {
         await UpdateDepense(editId, { ...form, montant: Number(form.montant) });
         const updatedDepenses = depenses.map((d) =>
@@ -72,6 +76,12 @@ function DepensePage() {
         setDepenses([...depenses, newDep]);
       }
       setForm({ departement: "", responsable: "", type: "", motif: "", montant: "" });
+    } 
+  }catch(err){
+      console.log('erreur',err);
+      
+    }finally{
+      setLoader(false)
     }
   };
 
@@ -116,7 +126,7 @@ function DepensePage() {
 
             
             <select
-  						value={forms.name}
+  						value={forms.departement}
   						onChange={(e) => handleChangeDepartement(e)}
   						required
 						>
@@ -161,6 +171,11 @@ function DepensePage() {
             <button type="submit" className="btn">
               {editId ? "Modifier" : "Ajouter"}
             </button>
+            {loader && (
+              <div className="flex justify-center items-center">
+                <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
           </form>
           <br />
 
@@ -189,17 +204,17 @@ function DepensePage() {
               {filteredDepenses.map((d, i) => (
                 <tr key={i}>
                   <td>{d.departement}</td>
-                  <td>{d.manager}</td>
+                  <td>{d.manager || d.responsable}</td>
                   <td>{d.type}</td>
                   <td>{d.motif}</td>
                   <td>{Number(d.montant).toLocaleString()} F</td>
                   <td>
                     <FaEdit className="icon-edit" onClick={() => editDepense(d)} />
-                    {/*<FaTrash
+                    <FaTrash
                       className="icon-delete"
                       onClick={() => deleteDepense(d)}
                       style={{ marginLeft: "8px", color: "red", cursor: "pointer" }}
-                    />*/}
+                    />
                   </td>
                 </tr>
               ))}

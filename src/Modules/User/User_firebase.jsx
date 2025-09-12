@@ -49,6 +49,17 @@ const generatePassword = (length = 7) => {
 
 export const NewUser = async (datas) => {
   try {
+    console.log("Nouvel utilisateur reçu :", datas);
+    const q = query(
+      collection(db,"Utilisateurs"),
+      where("téléphone",'==',datas.téléphone)
+    )
+    const qdocs = await getDocs(q)
+    if(!qdocs.empty){
+      alert (`le numero ${datas.téléphone} a deja ete utilise`)
+      console.log (`le numero ${datas.téléphone} a deja ete utilise`)
+      return false
+    }
     // Mot de passe temporaire généré (inutile pour l'utilisateur)
     const tempPassword = Math.random().toString(36).slice(-8);
 
@@ -66,7 +77,7 @@ export const NewUser = async (datas) => {
     const docSnapshot = await getDoc(docRef);
     if (docSnapshot.exists()) {
       console.log("Utilisateur existe déjà dans Firestore !");
-      return;
+      return false;
     }
 
     // 🔹 Ajouter l'utilisateur dans Firestore sans mot de passe
@@ -81,6 +92,7 @@ export const NewUser = async (datas) => {
     // 🔹 Envoyer email pour que l'utilisateur crée son mot de passe
     await sendPasswordResetEmail(auth, datas.email);
     console.log(`Email envoyé à ${datas.email} pour créer son mot de passe`);
+    return true
 
   } catch (err) {
     console.log("Erreur lors de la création de l'utilisateur :", err);
@@ -94,6 +106,22 @@ export const GetUser = async()=>{
       id:doc.id,
       ...doc.data()
     })).filter((user)=> user.role !== 'admin')
+    console.log('user recuperer')
+    return dataList
+  } catch(err){
+    console.log('erreur lors de la recuperation',err)
+    return []
+  }
+}
+// .filter((user)=> user.role !== 'admin')
+
+export const GetUsers = async()=>{
+  try{
+    const querySnapshot = await getDocs (collection(db,'Utilisateurs'))
+    const dataList = querySnapshot.docs.map((doc)=>({
+      id:doc.id,
+      ...doc.data()
+    }))
     console.log('user recuperer')
     return dataList
   } catch(err){

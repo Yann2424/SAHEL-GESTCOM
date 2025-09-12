@@ -33,7 +33,7 @@ export default function Connexion() {
 			} else if (step === "login") {
 				const userCredential = await signInWithEmailAndPassword(auth, email, password);
 				
-				const userRole = localStorage.getItem("role") || "admin";
+				const userRole = localStorage.getItem("role") ;
 				if (userRole === "admin") {
 					const user = userCredential.user;
 
@@ -107,6 +107,86 @@ export default function Connexion() {
 			setloader(false)
 		}
 	};
+
+// 	const soumission = async (data) => {
+//   const { email, password } = data;
+//   try {
+//     setloader(true);
+
+//     if (step === "signup") return; // tu peux gérer l'inscription ici si besoin
+
+//     // Connexion Firebase
+//     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+//     const user = userCredential.user;
+
+//     // Récupérer l'utilisateur depuis Firestore
+//     const docRef = doc(db, "Utilisateurs", user.email);
+//     const docSnapshot = await getDoc(docRef);
+
+//     if (!docSnapshot.exists()) {
+//       alert("L'utilisateur n'existe pas");
+//       await auth.signOut();
+//       return;
+//     }
+
+//     const userData = docSnapshot.data();
+
+//     // Vérifier le rôle
+//     if (userData.role === "admin") {
+//       setCurrentUser({
+//         email: user.email,
+//         displayName: userData.name,
+//         uid: user.uid,
+//         role: "admin"
+//       });
+//       navigate("/dashboard/administrateur");
+//       return;
+//     }
+
+//     if (userData.role !== "Responsable") {
+//       await auth.signOut();
+//       alert("Vous n'êtes pas autorisé à la page Responsable");
+//       return;
+//     }
+
+//     // Vérifier le département pour les Responsables
+//     const querySnapshot = await getDocs(
+//       query(collection(db, "Departements"), where("manager", "==", userData.name))
+//     );
+
+//     if (querySnapshot.empty) {
+//       await auth.signOut();
+//       alert("Aucun département trouvé pour ce responsable");
+//       return;
+//     }
+
+//     const departementData = querySnapshot.docs[0].data();
+//     if (departementData.active === false) {
+//       await auth.signOut();
+//       alert("Votre compte est désactivé");
+//       return;
+//     }
+
+//     // Tout est OK pour le Responsable
+//     setCurrentUser({
+//       email: user.email,
+//       displayName: userData.name,
+//       uid: user.uid,
+//       role: "Responsable",
+//       departement: departementData.name
+//     });
+//     navigate("/dashboard/responsable");
+
+//   } catch (err) {
+//     setError("Erreur : " + err.message);
+//     console.log(err);
+//   } finally {
+//     setloader(false);
+//   }
+// };
+
+
+	
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#213547] to-[#213547] p-4 text-center text-white">

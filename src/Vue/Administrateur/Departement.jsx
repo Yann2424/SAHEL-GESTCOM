@@ -7,7 +7,7 @@ import {
 	UpdateDepartement,
 	DeleteDepartement,
 } from "../../Modules/Departement/Departement_firebase.jsx.jsx";
-import { GetUser } from "../../Modules/User/User_firebase";
+import { GetUser, GetUsers } from "../../Modules/User/User_firebase";
 
 function DepartmentsPage() {
 	const [departments, setDepartments] = useState([]);
@@ -42,7 +42,7 @@ function DepartmentsPage() {
 	// Charger les utilisateurs
 	useEffect(() => {
 		const fetchUsers = async () => {
-			const data = await GetUser();
+			const data = await GetUsers();
 			if (Array.isArray(data)) {
 				setUsers(data);
 			} else {

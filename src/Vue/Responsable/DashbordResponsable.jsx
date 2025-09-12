@@ -375,14 +375,14 @@ export default function DashboardResponsable() {
 										<option value="Technicien">Technicien</option>
 										<option value="Autre">Autre</option>{" "} */}
 										{type.map((t,index)=>(
-											<option key={index} value="t">{t}</option>
+											<option key={index} value={t}>{t}</option>
 										))}
 									</select>
 								</div>
 								<div className="md:col-span-12 flex items-end">
 									<button type="submit" className="bg-orange-500 text-white px-4 py-2 rounded flex items-center justify-center">
   										{loader ? (
-    										<div className="w-5 h-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    										<div className="w-5 h-5  border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
   											) : (
     										<>
       											<FaPlus className="mr-2"/>
@@ -398,87 +398,84 @@ export default function DashboardResponsable() {
 								</div>
 							</form>
 							 {modals && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
-            <h2 className="text-lg font-bold mb-4">Ajouter un nouveau type</h2>
-            <form onSubmit={AddDepenseType}>
-              <input
-                type="text"
-                value={nouveauType}
-                onChange={(e) => setNouveauType(e.target.value)}
-                className="w-full border p-2 rounded mb-4"
-                placeholder="Nom du type"
-                required
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  className="px-3 py-1 rounded bg-gray-400 text-white"
-                  onClick={() => setModals(false)}
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 rounded bg-blue-600 text-white"
-                >
-                  Ajouter
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    
-  
-
-						</div>
-						<div className="panel mt-4">
-							<h3 className="panel-title">Historique des dépenses</h3>
-							<div className="table-wrap">
-								<table className="table">
-									<thead>
-										<tr>
-											<th>Date</th>
-											<th>Motif</th>
-											<th>Type</th>
-											<th className="text-right">Montant (XAF)</th>
+        						<div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
+          							<div className="bg-white p-6 rounded-xl shadow-lg w-96">
+            							<h2 className="text-lg font-bold mb-4">Ajouter un nouveau type</h2>
+            							<form onSubmit={AddDepenseType}>
+              								<input
+                							type="text"
+                							value={nouveauType}
+                							onChange={(e) => setNouveauType(e.target.value)}
+                							className="w-full border p-2 rounded mb-4"
+                							placeholder="Nom du type"
+                							required
+              								/>
+              								<div className="flex justify-end gap-2">
+                								<button
+                  								type="button"
+                  								className="px-3 py-1 rounded bg-gray-400 text-white"
+                  								onClick={() => setModals(false)}
+                								>
+                  								Annuler
+                								</button>
+                								<button
+                  								type="submit"
+                  								className="px-3 py-1 rounded bg-blue-600 text-white"
+                								>
+                  								Ajouter
+                								</button>
+              								</div>
+            							</form>
+          							</div>
+        						</div>
+      						)}
+    					</div>
+							<div className="panel mt-4">
+								<h3 className="panel-title">Historique des dépenses</h3>
+								<div className="table-wrap">
+									<table className="table">
+										<thead>
+											<tr>
+												<th>Date</th>
+												<th>Motif</th>
+												<th>Type</th>
+												<th className="text-right">Montant (XAF)</th>
 											
-										</tr>
-									</thead>
-									<tbody>
-										{depenses.length === 0 && (
-											<tr>
-												<td colSpan={5} className="empty">
-													{" "}
-													Aucune dépense enregistrée.{" "}
-												</td>
 											</tr>
-										)}
-										{depenses.map((d,idx) => (
-											<tr key={d.id || `${d.date}-${d.motif}-${idx}`}>
-												<td>{new Date(d.date).toLocaleDateString()}</td>
-												<td>{d.motif}</td> <td>{d.type}</td>
-												<td className="text-right">{formatMoney(d.montant)}</td>
+										</thead>
+										<tbody>
+											{depenses.length === 0 && (
+												<tr>
+													<td colSpan={5} className="empty">
+														{" "}
+														Aucune dépense enregistrée.{" "}
+													</td>
+												</tr>
+											)}
+											{depenses.map((d,idx) => (
+												<tr key={d.id || `${d.date}-${d.motif}-${idx}`}>
+													<td>{new Date(d.date).toLocaleDateString()}</td>
+													<td>{d.motif}</td> <td>{d.type}</td>
+													<td className="text-right">{formatMoney(d.montant)}</td>
 												
-											</tr>
-										))}
-									</tbody>
-									{depenses.length > 0 && (
-										<tfoot>
-											<tr>
-												<td colSpan={3} className="text-right font-semibold">
-													{" "}
-													Total{" "}
-												</td>
-												<td className="text-right font-semibold">
-													{formatMoney(totalDepenses)} XAF
-												</td>
+												</tr>
+											))}
+										</tbody>
+										{depenses.length > 0 && (
+											<tfoot>
+												<tr>
+													<td colSpan={3} className="text-right font-semibold">
+														{" "}
+														Total{" "}
+													</td>
+													<td className="text-right font-semibold">
+														{formatMoney(totalDepenses)} XAF
+													</td>
 												<td></td>
-											</tr>
-										</tfoot>
-									)}{" "}
-								</table>
+												</tr>
+											</tfoot>
+										)}{" "}
+									</table>
 							</div>
 						</div>
 					</section>

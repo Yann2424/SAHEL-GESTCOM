@@ -22,7 +22,7 @@ import {
   ValideRapport,
   refuserRapport,
 } from "../../Modules/UtilisateurR/Rapport/RapportR";
-import { GetUser } from "../../Modules/User/User_firebase";
+import { GetUser, GetUsers } from "../../Modules/User/User_firebase";
 import { GetDepenseFUser } from "../../Modules/UtilisateurR/Depense/DepenseRes";
 
 function Rapport() {

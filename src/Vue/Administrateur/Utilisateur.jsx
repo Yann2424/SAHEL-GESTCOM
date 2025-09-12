@@ -96,9 +96,10 @@ function Utilisateur() {
     try {
       setLoading(true)
       if (newUser.name && newUser.email) {
-        await NewUser(newUser);
-        setUsers([...users, newUser]);
-        setNewUser({
+        const success = await NewUser(newUser);
+        if (success){
+          setUsers([...users, newUser]);
+          setNewUser({
           name: "",
           email: "",
           téléphone: "",
@@ -106,6 +107,7 @@ function Utilisateur() {
           role: "",
         });
         setShowForm(false);
+        }
       }
     }catch(err){
       console.log('erreur',err);
